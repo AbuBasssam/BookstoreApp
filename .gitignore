@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 # Fody - auto-generated configuration file
 appsettings.*.json
+/BookstoreAPIs/appsettings.json
