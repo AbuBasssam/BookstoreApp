@@ -8,8 +8,12 @@ public class AppDbContext : IdentityDbContext<User, Role, int,
                             IdentityUserLogin<int>, IdentityRoleClaim<int>,
                             IdentityUserToken<int>>
 {
+    public DbSet<SystemSettings> Settings { get; set; }
     public AppDbContext(DbContextOptions options) : base(options)
     {
+
+
+
 
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
