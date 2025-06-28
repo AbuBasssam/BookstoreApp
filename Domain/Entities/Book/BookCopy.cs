@@ -8,4 +8,5 @@ public class BookCopy : IEntity<int>
 
     // Navigation Properties
     public virtual Book Book { get; set; }
+    public virtual ICollection<BorrowingRecord> BorrowingRecords { get; set; }
 }
