@@ -20,6 +20,7 @@ public class Book : IEntity<int>
         get => (byte)(Copies?.Count ?? 0); // Calculate based on Copies
         private set => _numberOfCopies = value; // Private setter for internal use
     }
+    public string ImageUrl { get; set; }
     // Navigation Properties
     public virtual Category Category { get; set; }
     public virtual Author Author { get; set; }

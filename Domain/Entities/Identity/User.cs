@@ -10,6 +10,8 @@ public class User : IdentityUser<int>
     public virtual Role Role { get; set; }
 
     public virtual ICollection<UserRefreshToken>? RefreshTokens { get; }
+    public virtual ICollection<UserDevice>? Devices { get; }
+    public virtual ICollection<Notification>? Notifications { get; }
 
     #endregion
 

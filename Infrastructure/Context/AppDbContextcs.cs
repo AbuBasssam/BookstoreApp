@@ -9,6 +9,8 @@ public class AppDbContext : IdentityDbContext<User, Role, int,
                             IdentityUserToken<int>>
 {
     public DbSet<SystemSettings> Settings { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<UserDevice> UserDevices { get; set; }
     public AppDbContext(DbContextOptions options) : base(options)
     {
 

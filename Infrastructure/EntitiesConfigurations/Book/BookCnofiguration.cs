@@ -8,15 +8,26 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
     public void Configure(EntityTypeBuilder<Book> builder)
     {
         builder.ToTable("Books");
+
         builder.HasKey(b => b.Id);
+
         builder.Property(b => b.Id).HasColumnName("BookID").ValueGeneratedOnAdd();
+
         builder.Property(b => b.TitleEN).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+
         builder.Property(b => b.TitleAR).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+
         builder.Property(b => b.PublishDate).IsRequired();
+
         builder.Property(b => b.ISBN).HasColumnType("nvarchar").IsRequired().HasMaxLength(20);
+
         builder.Property(b => b.NumberOfCopies)
             .HasColumnType("tinyint")
             .HasComputedColumnSql("dbo.fn_GetBookCopyCount(BookID)");
+
+        builder.Property(b => b.ImageUrl).HasColumnType("nvarchar")
+            .IsRequired()
+            .HasMaxLength(250);
 
         // relationships Configuration
         builder.HasOne(b => b.Category)
