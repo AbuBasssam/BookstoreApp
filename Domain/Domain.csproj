@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="AppMetaData\" />
     <Folder Include="Responses\" />
   </ItemGroup>
 

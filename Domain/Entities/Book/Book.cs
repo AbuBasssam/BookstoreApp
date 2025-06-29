@@ -11,15 +11,8 @@ public class Book : IEntity<int>
     public required string ISBN { get; set; }
     public enCategory CategoryID { get; set; }
     public int AuthorID { get; set; }
+    public int NumberOfCopies => Copies?.Count ?? 0;
 
-    // Backing field for NumberOfCopies
-    private byte _numberOfCopies;
-
-    public byte NumberOfCopies
-    {
-        get => (byte)(Copies?.Count ?? 0); // Calculate based on Copies
-        private set => _numberOfCopies = value; // Private setter for internal use
-    }
     public string ImageUrl { get; set; }
     // Navigation Properties
     public virtual Category Category { get; set; }

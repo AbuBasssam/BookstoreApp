@@ -1,4 +1,7 @@
+using Domain.Entities;
 using Infrastructure;
+using Infrastructure.Seeder;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +62,22 @@ builder.Services.AddSerilog();*/
 #endregion
 
 var app = builder.Build();
+#region Seeder
+using (var scope = app.Services.CreateScope())
+{
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+    var DbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await RoleSeeder.SeedAsync(roleManager);
+    await UserSeeder.SeedAsync(userManager);
+    await SystemSettingsSeeder.SeedAsync(DbContext);
+    await BookSeeder.SeedAsync(DbContext);
+    //await SPAndFunctionsSeeder.SeedAsync(DbContext);
+
+
+}
+
+#endregion
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
