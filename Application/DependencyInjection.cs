@@ -1,10 +1,12 @@
 ﻿using Application.Interfaces;
 using Application.Services;
+using ApplicationLayer.Resources;
 using Domain.HelperClasses;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -17,6 +19,10 @@ public static class DependencyInjection
 
         JWTAuthentication(services, configuration);
         ServicesRegisteration(services);
+
+        //Localization
+        services.AddLocalization(options => options.ResourcesPath = "Resources");
+        services.AddScoped<IStringLocalizer<SharedResoruces>, StringLocalizer<SharedResoruces>>();
 
         return services;
     }

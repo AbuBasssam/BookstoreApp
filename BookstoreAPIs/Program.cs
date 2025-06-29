@@ -2,6 +2,9 @@ using Domain.Entities;
 using Infrastructure;
 using Infrastructure.Seeder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,7 @@ builder.Services
 #endregion
 
 #region Localization
-/*builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews();
 builder.Services.AddLocalization(opt =>
 {
     opt.ResourcesPath = "";
@@ -38,7 +41,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
 });
-*/
+
 
 #endregion
 
@@ -62,6 +65,7 @@ builder.Services.AddSerilog();*/
 #endregion
 
 var app = builder.Build();
+
 #region Seeder
 using (var scope = app.Services.CreateScope())
 {
@@ -78,6 +82,12 @@ using (var scope = app.Services.CreateScope())
 }
 
 #endregion
+
+#region Localization Middleware
+var options = app.Services.GetService<IOptions<RequestLocalizationOptions>>();
+app.UseRequestLocalization(options.Value);
+#endregion
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

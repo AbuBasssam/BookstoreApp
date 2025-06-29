@@ -1,8 +1,11 @@
 ﻿using Application.Interfaces;
+using ApplicationLayer.Resources;
 using Domain.Entities;
 using Domain.HelperClasses;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -17,17 +20,21 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenRepository _refreshTokenRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly SymmetricSecurityKey _signaturekey;
+    private readonly IStringLocalizer<SharedResoruces> _Localizer;
     private static string _SecurityAlgorithm = SecurityAlgorithms.HmacSha256Signature;
+    private static JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
+
     #endregion
 
     #region Constructor(s)
     public AuthService(JwtSettings jwtSettings, IUserService userService, IRefreshTokenRepository refreshTokenRepo,
-        UserManager<User> userManager, IUnitOfWork unitOfWork)
+        UserManager<User> userManager, IUnitOfWork unitOfWork, IStringLocalizer<SharedResoruces> localizer)
     {
         _jwtSettings = jwtSettings;
         _userService = userService;
         _refreshTokenRepo = refreshTokenRepo;
         _unitOfWork = unitOfWork;
+        _Localizer = localizer;
         _signaturekey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.Secret!));
 
     }
@@ -80,6 +87,28 @@ public class AuthService : IAuthService
             RefreshToken = refreshTokenObj
         };
     }
+    public bool IsValidAccessToken(string AccessTokenStr)
+    {
+        try
+        {
+            var (jwtAccessTokenObj, jwtAccesTokenEx) = GetJwtAccessTokenObjFromAccessTokenString(AccessTokenStr);
+            if (jwtAccesTokenEx != null) return false;
+
+            GetClaimsPrinciple(AccessTokenStr);
+
+            if (jwtAccessTokenObj!.ValidTo < DateTime.UtcNow) return false;
+
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex.Message);
+
+            return false;
+        }
+    }
+
     #endregion
 
     #region AccessToken Methods
@@ -112,6 +141,52 @@ public class AuthService : IAuthService
             expires: DateTime.UtcNow.AddDays(_jwtSettings.AccessTokenExpireDate),
             signingCredentials: new SigningCredentials(_signaturekey, _SecurityAlgorithm)
         );
+    }
+    public (JwtSecurityToken?, Exception?) GetJwtAccessTokenObjFromAccessTokenString(string AccessToken)
+    {
+        try
+        {
+            return ((JwtSecurityToken)_tokenHandler.ReadToken(AccessToken), null);
+        }
+        catch (Exception ex)
+        {
+            return (null, ex);
+        }
+    }
+    public (ClaimsPrincipal?, Exception?) GetClaimsPrinciple(string AccessToken)
+    {
+        var parameters = _GetTokenValidationParameters();
+
+        try
+        {
+            var principal = _tokenHandler.ValidateToken(AccessToken, parameters, out SecurityToken validationToken);
+
+            if (validationToken is JwtSecurityToken jwtToken && jwtToken.Header.Alg.Equals(_SecurityAlgorithm))
+                return (principal, null);
+
+            return (null, new ArgumentNullException(_Localizer[SharedResorucesKeys.ClaimsPrincipleIsNull]));
+        }
+        catch (Exception ex)
+        {
+            return (null, ex);
+        }
+    }
+    private TokenValidationParameters _GetTokenValidationParameters()
+    {
+        return new TokenValidationParameters
+        {
+            ValidateIssuer = _jwtSettings.ValidateIssuer,
+            ValidIssuers = new[] { _jwtSettings.Issuer },
+
+            ValidateAudience = _jwtSettings.ValidateAudience,
+            ValidAudience = _jwtSettings.Audience,
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret!)),
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
     }
     private async Task<(JwtSecurityToken, string)> _GenerateAccessToken(User User)
     {
