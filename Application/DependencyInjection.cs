@@ -1,11 +1,13 @@
-﻿using Domain.HelperClasses;
+﻿using Application.Interfaces;
+using Application.Services;
+using Domain.HelperClasses;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace BookstoreApplication;
+namespace Application;
 
 public static class DependencyInjection
 {
@@ -14,34 +16,7 @@ public static class DependencyInjection
         //FluentValidatorConfiguration(services);
 
         JWTAuthentication(services, configuration);
-
-        //GoogleAuthentication(services, configuration);
-
-        //TwilioSetting(services, configuration);
-
-        //StripeSetting(services, configuration);
-
-        //EmailSetting(services, configuration);
-
-
-        //ServicesRegisteration(services);
-
-        //services.AddSwaggerGen(_GetSecurityRequirement);
-
-        //Configuration for AutoMapper
-        //services.AddAutoMapper(Assembly.GetExecutingAssembly());
-
-        // Configuration for MediaR
-        //services.AddMediatR(_getMediatRServiceConfiguration);
-
-        //services.AddTransient<ResponseHandler>();
-
-        //services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-
-        //services.AddTransient<IStringLocalizer<SharedResoruces>, StringLocalizer<SharedResoruces>>();
-
-
+        ServicesRegisteration(services);
 
         return services;
     }
@@ -86,5 +61,12 @@ public static class DependencyInjection
     {
         option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    }
+    private static void ServicesRegisteration(IServiceCollection services)
+    {
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
+
+
     }
 }

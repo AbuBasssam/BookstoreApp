@@ -1,4 +1,6 @@
-﻿using Domain.Entities;
+﻿using Application.Interfaces;
+using Domain.Entities;
+using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +18,7 @@ public static class DependencyInjection
 
         IdentityRegisteration(services);
 
-        //RepsitoriesRegisteration(services);
+        RepsitoriesRegisteration(services);
 
 
         return services;
@@ -60,5 +62,15 @@ public static class DependencyInjection
         .AddRoles<Role>()
         .AddRoleManager<RoleManager<Role>>()
         .AddEntityFrameworkStores<AppDbContext>();
+    }
+    private static void RepsitoriesRegisteration(IServiceCollection services)
+    {
+        // Register the repository and Unit of Work
+        services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
     }
 }
