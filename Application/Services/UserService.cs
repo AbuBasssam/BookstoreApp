@@ -10,9 +10,24 @@ public class UserService : IUserService
     private readonly UserManager<User> _userManager;
     #endregion
 
+    #region Constructor(s)
     public UserService(UserManager<User> userManager)
     {
         _userManager = userManager;
+    }
+    #endregion
+
+    #region Action Method(s)
+
+    //User Manager part
+    public IQueryable<User> GetUserByEmailAsync(string email)
+    {
+        return _userManager.Users.Where(x => x.Email!.ToLower().Equals(email.ToLower()));
+    }
+
+    public async Task<bool> CheckPasswordAsync(User User, string Password)
+    {
+        return await _userManager.CheckPasswordAsync(User, Password);
     }
 
     //Role Manger part
@@ -20,4 +35,8 @@ public class UserService : IUserService
     {
         return (await _userManager.GetRolesAsync(User)).ToList();
     }
+
+    #endregion
+
+
 }

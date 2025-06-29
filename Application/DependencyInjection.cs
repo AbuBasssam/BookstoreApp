@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Services;
 using Domain.HelperClasses;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection registerApplicationDependencies(this IServiceCollection services, IConfiguration configuration)
     {
-        //FluentValidatorConfiguration(services);
 
         JWTAuthentication(services, configuration);
         ServicesRegisteration(services);
@@ -56,8 +56,7 @@ public static class DependencyInjection
 
         option.TokenValidationParameters = validationParameters;
     }
-
-    private static void _authenticationInfo(Microsoft.AspNetCore.Authentication.AuthenticationOptions option)
+    private static void _authenticationInfo(AuthenticationOptions option)
     {
         option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -65,7 +64,7 @@ public static class DependencyInjection
     private static void ServicesRegisteration(IServiceCollection services)
     {
         services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IAuthService, AuthService>();
 
 
     }

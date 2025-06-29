@@ -2,7 +2,7 @@
 using Domain.HelperClasses;
 
 namespace Application.Interfaces;
-public interface IAuthenticationService
+public interface IAuthService
 {
     Task<JwtAuthResult> GetJwtAuthForuser(User User);
 }

@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 namespace Application.Services;
-public class AuthenticationService : IAuthenticationService
+public class AuthService : IAuthService
 {
     #region Fields
     private readonly JwtSettings _jwtSettings;
@@ -21,7 +21,7 @@ public class AuthenticationService : IAuthenticationService
     #endregion
 
     #region Constructor(s)
-    public AuthenticationService(JwtSettings jwtSettings, IUserService userService, IRefreshTokenRepository refreshTokenRepo,
+    public AuthService(JwtSettings jwtSettings, IUserService userService, IRefreshTokenRepository refreshTokenRepo,
         UserManager<User> userManager, IUnitOfWork unitOfWork)
     {
         _jwtSettings = jwtSettings;
