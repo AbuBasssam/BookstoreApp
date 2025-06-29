@@ -23,8 +23,7 @@ public class BookViewConfiguration : IEntityTypeConfiguration<BookView>
 
 
         builder.Property(b => b.TitleAR).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
-        //builder.Property(b => b.IsAvailable).HasComputedColumnSql(
-        //"(CASE WHEN EXISTS (SELECT 1 FROM BookCopies WHERE BookId = Id AND IsAvailable = 1) THEN 1 ELSE 0 END)");
+
     }
 }
 

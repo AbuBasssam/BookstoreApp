@@ -69,7 +69,7 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Book", x => x.BookID);
                     table.ForeignKey(
-                        name: "FK_Book_Author_AuthorID",
+                        name: "FK_Books_Author_AuthorID",
                         column: x => x.AuthorID,
                         principalTable: "Author",
                         principalColumn: "Id",
