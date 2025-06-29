@@ -12,6 +12,7 @@ public class AppDbContext : IdentityDbContext<User, Role, int,
     public DbSet<Book> Books { get; set; }
     public DbSet<BookCopy> BookCopies { get; set; }
     public DbSet<Category> Categories { get; set; }
+    public DbSet<BookView> BookView { get; set; }
     public DbSet<SystemSettings> Settings { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<UserDevice> UserDevices { get; set; }

@@ -21,12 +21,6 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
 
         builder.Property(b => b.ISBN).HasColumnType("nvarchar").IsRequired().HasMaxLength(20);
 
-        //builder.Property(b => b.NumberOfCopies)
-        //    .HasColumnType("tinyint")
-        //    .HasComputedColumnSql("dbo.fn_GetBookCopyCount(BookID)")
-        //    .ValueGeneratedOnAddOrUpdate()
-        //    .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
-
         builder.Property(b => b.ImageUrl).HasColumnType("nvarchar")
             .IsRequired()
             .HasMaxLength(250);
@@ -41,5 +35,4 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
                .HasForeignKey(b => b.AuthorID);
     }
 }
-
 
