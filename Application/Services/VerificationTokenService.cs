@@ -15,13 +15,13 @@ public class VerificationTokenService
     {
         _jwtSetting = jwtSetting;
     }
-    public string GenerateVerificationToken(User user, int expiresInMinutes)
+    public (JwtSecurityToken, string) GenerateVerificationToken(User user, int expiresInMinutes)
     {
         var claims = GetVerificationClaims(user);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSetting.Secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var token = new JwtSecurityToken(
+        var obj = new JwtSecurityToken(
             issuer: _jwtSetting.Issuer,
             audience: _jwtSetting.Audience,
             claims: claims,
@@ -29,7 +29,8 @@ public class VerificationTokenService
             signingCredentials: creds
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(obj);
+        return (obj, accessToken);
     }
 
 
@@ -40,7 +41,7 @@ public class VerificationTokenService
             new Claim(VerificationClaims.IsVerificationToken, "true"),
             new Claim(nameof(UserClaimModel.Id), user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email !),
-
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
 
         };
     }
@@ -48,27 +49,3 @@ public class VerificationTokenService
 
 
 
-//// Program.cs Configuration
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.AddPolicy("VerificationOnly", policy =>
-//        policy.Requirements.Add(new VerificationOnlyRequirement()));
-//});
-
-//builder.Services.AddScoped<IAuthorizationHandler, VerificationOnlyHandler>();
-//1. POST /signup 
-//   → Returns: { success: true, verificationToken: "..." }
-
-//2.POST / send - email - confirmation - otp
-//   → Header: Authorization: Bearer[verificationToken]
-
-//3.POST / verify - email - confirmation - otp
-//   → Header: Authorization: Bearer[verificationToken]
-//   → Returns: Updated verificationToken with emailVerified = true
-
-//4. POST /confirm-phone-number
-//   → Header: Authorization: Bearer[verificationToken]
-
-//5.POST / verify - phone - number
-//   → Header: Authorization: Bearer[verificationToken]
-//   → Returns: Full JWT token for app access

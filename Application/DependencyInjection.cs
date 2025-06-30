@@ -20,6 +20,7 @@ public static class DependencyInjection
 
         JWTAuthentication(services, configuration);
         ServicesRegisteration(services);
+        EmailSetting(services, configuration);
 
         // add authorization policies
         AddPolicies(services);
@@ -87,5 +88,26 @@ public static class DependencyInjection
                 policy.Requirements.Add(new VerificationOnlyRequirement()));
         });
 
+    }
+    private static void EmailSetting(IServiceCollection services, IConfiguration configuration)
+    {
+        //way 1: Using IOptions<T>
+        /*
+        var EmailSetting = configuration.GetSection("emailSettings");
+
+        services.Configure<EmailSettings>(EmailSetting);
+
+        services.AddSingleton(EmailSetting);
+        */
+
+        // way 2: Using Bind method
+        var emailSetting = configuration.GetSection("emailSettings");
+        services.Configure<EmailSettings>(emailSetting);
+
+        var EmailSetting = new EmailSettings();
+
+        configuration.GetSection(nameof(EmailSettings)).Bind(EmailSetting);
+
+        services.AddSingleton(EmailSetting);
     }
 }

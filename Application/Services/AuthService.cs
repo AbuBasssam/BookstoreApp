@@ -3,8 +3,10 @@ using Application.Models;
 using ApplicationLayer.Resources;
 using Domain.AppMetaData;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.HelperClasses;
 using Domain.Security;
+using Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
@@ -21,10 +23,13 @@ public class AuthService : IAuthService
     #region Fields
     private readonly JwtSettings _jwtSettings;
     private readonly IUserService _userService;
+    private readonly IEmailsService _emailsService;
     private readonly IRefreshTokenRepository _refreshTokenRepo;
+    private readonly IOtpRepsitory _otpRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly SymmetricSecurityKey _signaturekey;
     private readonly IStringLocalizer<SharedResoruces> _Localizer;
+    private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
     private readonly VerificationTokenService _verificationTokenService;
     private static string _SecurityAlgorithm = SecurityAlgorithms.HmacSha256Signature;
@@ -34,14 +39,17 @@ public class AuthService : IAuthService
     #endregion
 
     #region Constructor(s)
-    public AuthService(JwtSettings jwtSettings, IUserService userService, IRefreshTokenRepository refreshTokenRepo,
+    public AuthService(JwtSettings jwtSettings, IUserService userService, IEmailsService emailsService, IRefreshTokenRepository refreshTokenRepo, IOtpRepsitory otpRepo,
         UserManager<User> userManager, IUnitOfWork unitOfWork, IStringLocalizer<SharedResoruces> localizer, RoleManager<Role> roleManager)
     {
         _jwtSettings = jwtSettings;
         _userService = userService;
+        _emailsService = emailsService;
         _refreshTokenRepo = refreshTokenRepo;
+        _otpRepo = otpRepo;
         _unitOfWork = unitOfWork;
         _Localizer = localizer;
+        _userManager = userManager;
         _roleManager = roleManager;
         _signaturekey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.Secret!));
         _verificationTokenService = new VerificationTokenService(jwtSettings);
@@ -104,10 +112,14 @@ public class AuthService : IAuthService
             if (!createUserResult.IsSuccess) return createUserResult;
 
             // Step 3: Generate verification token for Confirmation operation
-            string sessionToken = _verificationTokenService.GenerateVerificationToken(newUser, 15);
+            UserRefreshToken verificationToken = _GenerateVerificationToken(newUser, 15);
 
+            //Step 4:Save verification token in database
+            await _refreshTokenRepo.AddAsync(verificationToken);
 
-            return Result<string>.Success(sessionToken);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<string>.Success(verificationToken.AccessToken!);
 
 
         }
@@ -119,6 +131,65 @@ public class AuthService : IAuthService
 
         }
     }
+    public async Task<Result<string>> SendEmailConfirmationCode(string token)
+    {
+        try
+        {
+            // Step 1: Validate the session token
+            var tokenValidationResult = await _ValidateVerificationToken(token);
+
+            if (!tokenValidationResult.IsSuccess) return tokenValidationResult;
+
+            // Step 2: Extract email from the token
+            var getEmailResult = _GetEmailFromSessionToken(token);
+
+            if (!getEmailResult.IsSuccess) return getEmailResult;
+
+            string email = getEmailResult.data!;
+            // End new Area
+
+            // Step 1: Retrieve the user by email
+            var validateResult = await _ValidateUserExists(email);
+
+            // For security, return a generic success message if user not found.
+            if (!validateResult.IsSuccess) return Result<string>.Success(_Localizer[SharedResorucesKeys.Success]);
+
+            User user = validateResult.data!;
+
+            // Step 2: Handle OTP expiration and cooldown
+            var otpValidationResult = await ValidateOtpLifecycleAsync(email, user.Id, 2, enOtpType.ConfirmEmail);
+
+            if (!otpValidationResult.IsSuccess) return otpValidationResult;
+
+            // Step 3: Generate OTP and message
+            string otpCode = _GenerateOTPCode();
+
+            string message = $"Your email confirmation code is: {otpCode}";
+
+            // Step 4: Send email
+            await SendOtpEmail(user.Email!, otpCode, "Confirm Your Email");
+
+            //Step 5: _SaveOtp in database
+            int minutesValidDuration = 5;
+            await _SaveOtpToDb(user.Id, otpCode, enOtpType.ConfirmEmail, minutesValidDuration);
+
+            // Step 6: Commit changes to the database
+            await _unitOfWork.SaveChangesAsync();
+
+
+            return Result<string>.Success(_Localizer[SharedResorucesKeys.Success]);
+
+
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, messageTemplate: ex.Message);
+            return Result<string>.Success(string.Empty);
+
+        }
+    }
+
 
     #endregion
 
@@ -146,7 +217,7 @@ public class AuthService : IAuthService
             issuer: _jwtSettings.Issuer,
             audience: _jwtSettings.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(_jwtSettings.AccessTokenExpireDate),
+            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpireDate),
             signingCredentials: new SigningCredentials(_signaturekey, _SecurityAlgorithm)
         );
     }
@@ -281,6 +352,82 @@ public class AuthService : IAuthService
 
 
     #endregion
+    #region Send Email Confirmation Code methods
+    private async Task<Result<string>> _ValidateVerificationToken(string sessionToken)
+    {
+
+        bool isExpired = await _refreshTokenRepo.IsTokenExpired(sessionToken);
+
+
+        return isExpired ? Result<string>.Failure([_Localizer[SharedResorucesKeys.InvalidExpiredCode]]) : Result<string>.Success("");//"Invalid/Expired Code"
+
+    }
+
+    private Result<string> _GetEmailFromSessionToken(string sessionToken)
+    {
+        (JwtSecurityToken? jwtAccessTokenObj, Exception? exception) = GetJwtAccessTokenObjFromAccessTokenString(sessionToken);
+
+        (string email, Exception? emailException) = GetUserEmailFromJwtAccessTokenObj(jwtAccessTokenObj);
+        if (string.IsNullOrEmpty(email)) return Result<string>.Failure([_Localizer[SharedResorucesKeys.FailedExtractEmail]]);
+
+        return Result<string>.Success(email);
+    }
+
+
+    private async Task SendOtpEmail(string email, string otpCode, string subject)
+    {
+        string message = $"Your code to reset password: {otpCode}";
+        await _emailsService.SendEmail(email, message, subject);
+    }
+
+    private async Task _SaveOtpToDb(int UserID, string otp, enOtpType otpType, int minutesValidDuration)
+    {
+        var otpEntity = new Otp
+        {
+            Code = HashString(otp),
+            Type = otpType,
+            CreationTime = DateTime.UtcNow,
+            ExpirationTime = DateTime.UtcNow.AddMinutes(minutesValidDuration),
+            UserID = UserID
+        };
+        await _otpRepo.AddAsync(otpEntity);
+
+
+    }
+    private async Task<Result<string>> ValidateOtpLifecycleAsync(string email, int userId, int minutesCooldownPeriod, enOtpType otpType)
+    {
+        var oldOtp = await _GetLastCode(email, otpType);
+
+        if (oldOtp == null) return Result<string>.Success(string.Empty);
+
+
+        var timeSinceLastOtp = DateTime.UtcNow - oldOtp.CreationTime;
+        var cooldownPeriod = TimeSpan.FromMinutes(minutesCooldownPeriod);
+
+        if (timeSinceLastOtp < cooldownPeriod)
+        {
+            return Result<string>.Failure(new List<string>
+            {
+                _Localizer[SharedResorucesKeys.CooldownPeriodActive]
+
+            });
+        }
+
+        if (!IsCodeExpired(oldOtp.ExpirationTime))
+        {
+            oldOtp.ExpirationTime = DateTime.UtcNow;
+            await _otpRepo.UpdateAsync(oldOtp);
+
+            // Expire the session token.
+            await _DeactiveVerificationToken(userId);
+
+        }
+
+        return Result<string>.Success(string.Empty);
+    }
+
+
+    #endregion
 
     #region Helpers
     private string _GenerateRandomString64Length()
@@ -300,8 +447,92 @@ public class AuthService : IAuthService
             return Convert.ToBase64String(hashedBytes);
         }
     }
+    private string _GenerateOTPCode()
+    {
+        Random generator = new Random();
+        return generator.Next(100000, 1000000).ToString("D6");
+    }
+    private async Task _DeactiveVerificationToken(int UserID)
+    {
+        var activeRefreshToken =
+               await _refreshTokenRepo
+               .GetActiveSessionTokenByUserId(UserID)
+               .FirstOrDefaultAsync();
 
+        if (activeRefreshToken == null) return;
+
+        activeRefreshToken.IsRevoked = true;
+
+        activeRefreshToken.IsUsed = false;
+
+        activeRefreshToken.ExpiryDate = DateTime.UtcNow;
+
+        await _refreshTokenRepo.UpdateAsync(activeRefreshToken);
+
+    }
+    private UserRefreshToken _GenerateVerificationToken(User user, int minutesValidDuration = 3)
+    {
+        var (jwtAccessTokenObj, jwtAccessTokenString) = _verificationTokenService.GenerateVerificationToken(user, minutesValidDuration);
+
+
+        return new UserRefreshToken
+        {
+            UserId = user.Id,
+            AccessToken = jwtAccessTokenString,
+            RefreshToken = null,
+            JwtId = jwtAccessTokenObj.Id,
+            IsUsed = true,
+            IsRevoked = false,
+            CreatedAt = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddMinutes(minutesValidDuration)
+        };
+
+
+
+    }
 
     #endregion
+
+    #region Comfirmation Helpers
+    private string IsCodeWrongOrExpired(string otp, Otp entity)
+    {
+        return (IsCodeWrong(otp, entity.Code) || IsCodeExpired(entity.ExpirationTime)) ? "Expired" : "Valid";
+
+    }
+    private bool IsCodeWrong(string otpCode, string savedCode)
+    {
+        string hashedOtp = HashString(otpCode);
+
+        return savedCode != hashedOtp;
+    }
+    private bool IsCodeExpired(DateTime savedCodeExpirationTime)
+        => !(savedCodeExpirationTime > DateTime.UtcNow);
+
+    #endregion
+    public (string, Exception?) GetUserEmailFromJwtAccessTokenObj(JwtSecurityToken jwtAccessTokenObj)
+    {
+        var emailClaim = jwtAccessTokenObj.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+        return string.IsNullOrEmpty(emailClaim) ?
+            ("", new ArgumentNullException(_Localizer[SharedResorucesKeys.InvalidEmailClaim])) : (emailClaim, null);
+    }
+    private async Task<Result<User>> _ValidateUserExists(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+
+        return user == null ?
+            Result<User>.Failure(new List<string> { _Localizer[SharedResorucesKeys.UserNotFound] }) :
+
+            Result<User>.Success(user);
+    }
+
+    private async Task<Otp?> _GetLastCode(string Email, enOtpType otpType)
+    {
+        return await _otpRepo
+            .GetLastOtpAsync(Email, otpType)
+            .FirstOrDefaultAsync();
+    }
+
+
+
 
 }
