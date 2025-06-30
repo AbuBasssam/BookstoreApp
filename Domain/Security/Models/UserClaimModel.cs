@@ -1,4 +1,4 @@
-﻿namespace Domain.HelperClasses;
+﻿namespace Domain.Security;
 
 public class UserClaimModel
 {

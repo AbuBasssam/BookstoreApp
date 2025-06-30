@@ -2,6 +2,7 @@
 using Application.Services;
 using ApplicationLayer.Resources;
 using Domain.HelperClasses;
+using Domain.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +20,9 @@ public static class DependencyInjection
 
         JWTAuthentication(services, configuration);
         ServicesRegisteration(services);
+
+        // add authorization policies
+        AddPolicies(services);
 
         //Localization
         services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -72,6 +76,16 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();
 
+
+    }
+    public static void AddPolicies(this IServiceCollection services)
+    {
+        // add policies for authorization
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("VerificationOnly", policy =>
+                policy.Requirements.Add(new VerificationOnlyRequirement()));
+        });
 
     }
 }

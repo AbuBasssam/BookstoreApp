@@ -8,6 +8,7 @@ public class UserService : IUserService
 {
     #region Fields
     private readonly UserManager<User> _userManager;
+
     #endregion
 
     #region Constructor(s)
@@ -25,15 +26,14 @@ public class UserService : IUserService
         return _userManager.Users.Where(x => x.Email!.ToLower().Equals(email.ToLower()));
     }
 
+    public Task<IdentityResult> CreateUserAsync(User user, string password)
+    {
+        return _userManager.CreateAsync(user, password);
+    }
+
     public async Task<bool> CheckPasswordAsync(User User, string Password)
     {
         return await _userManager.CheckPasswordAsync(User, Password);
-    }
-
-    //Role Manger part
-    public async Task<List<string>> GetUserRolesAsync(User User)
-    {
-        return (await _userManager.GetRolesAsync(User)).ToList();
     }
 
     #endregion

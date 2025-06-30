@@ -77,6 +77,7 @@
 
         #region Miscellaneous Keys
         public const string UnexpectedError = "UnexpectedError";
+        public const string RoleNotAssigned = "RoleNotAssigned";
         #endregion
 
     }

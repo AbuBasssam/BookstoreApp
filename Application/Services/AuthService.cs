@@ -1,8 +1,12 @@
 ﻿using Application.Interfaces;
+using Application.Models;
 using ApplicationLayer.Resources;
+using Domain.AppMetaData;
 using Domain.Entities;
 using Domain.HelperClasses;
+using Domain.Security;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -21,22 +25,26 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly SymmetricSecurityKey _signaturekey;
     private readonly IStringLocalizer<SharedResoruces> _Localizer;
+    private readonly RoleManager<Role> _roleManager;
+    private readonly VerificationTokenService _verificationTokenService;
     private static string _SecurityAlgorithm = SecurityAlgorithms.HmacSha256Signature;
     private static JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
+
 
     #endregion
 
     #region Constructor(s)
     public AuthService(JwtSettings jwtSettings, IUserService userService, IRefreshTokenRepository refreshTokenRepo,
-        UserManager<User> userManager, IUnitOfWork unitOfWork, IStringLocalizer<SharedResoruces> localizer)
+        UserManager<User> userManager, IUnitOfWork unitOfWork, IStringLocalizer<SharedResoruces> localizer, RoleManager<Role> roleManager)
     {
         _jwtSettings = jwtSettings;
         _userService = userService;
         _refreshTokenRepo = refreshTokenRepo;
         _unitOfWork = unitOfWork;
         _Localizer = localizer;
+        _roleManager = roleManager;
         _signaturekey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.Secret!));
-
+        _verificationTokenService = new VerificationTokenService(jwtSettings);
     }
     #endregion
 
@@ -44,7 +52,7 @@ public class AuthService : IAuthService
     public async Task<JwtAuthResult> GetJwtAuthForuser(User User)
     {
         // 1) Generate jwtAccessTokon Object And String
-        var (jwtAccessTokenObj, jwtAccessTokenString) = await _GenerateAccessToken(User);
+        var (jwtAccessTokenObj, jwtAccessTokenString) = _GenerateAccessToken(User);
 
         // 2) Generate RefreshToken Object
         var refreshTokenObj = _GenerateRefreshToken(User);
@@ -61,31 +69,6 @@ public class AuthService : IAuthService
 
         // 5) return the AuthResult for the user
         return jwtAuthResult;
-    }
-    private UserRefreshToken _GetUserRefreshToken(User User, JwtSecurityToken jwtAccessTokenObj, string jwtAccessTokenString, RefreshToken refreshTokenObj)
-    {
-
-        return new UserRefreshToken
-        {
-            UserId = User.Id,
-            AccessToken = jwtAccessTokenString,
-            RefreshToken = HashString(refreshTokenObj.Value),
-            JwtId = jwtAccessTokenObj.Id,
-            IsUsed = true,
-            IsRevoked = false,
-            CreatedAt = DateTime.UtcNow,
-            ExpiryDate = refreshTokenObj.ExpiresAt,
-        };
-    }
-    private static JwtAuthResult _GetJwtAuthResult(string jwtAccessTokenString, RefreshToken refreshTokenObj)
-    {
-
-
-        return new JwtAuthResult
-        {
-            AccessToken = jwtAccessTokenString,
-            RefreshToken = refreshTokenObj
-        };
     }
     public bool IsValidAccessToken(string AccessTokenStr)
     {
@@ -108,27 +91,52 @@ public class AuthService : IAuthService
             return false;
         }
     }
+    public async Task<Result<string>> SignUp(User newUser, string password)
+    {
+        try
+        {
+            // Step 1: Check if the user already exists
+            var userExistsResult = await _CheckIfUserExists(newUser.Email);
+            if (!userExistsResult.IsSuccess) return userExistsResult;
+
+            // Step 2: Create a new user
+            var createUserResult = await _CreateUser(newUser, password);
+            if (!createUserResult.IsSuccess) return createUserResult;
+
+            // Step 3: Generate verification token for Confirmation operation
+            string sessionToken = _verificationTokenService.GenerateVerificationToken(newUser, 15);
+
+
+            return Result<string>.Success(sessionToken);
+
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, messageTemplate: ex.Message);
+
+            return Result<string>.Failure([]);
+
+        }
+    }
 
     #endregion
 
     #region AccessToken Methods
-    private List<Claim> _GenerateUserClaims(User User, List<string> Roles)
+    private List<Claim> _GenerateUserClaims(User User, string role)
     {
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, User.UserName!),
             new Claim(ClaimTypes.Name, User.UserName !),
             new Claim(ClaimTypes.Email, User.Email !),
-            new Claim(ClaimTypes.MobilePhone, User.PhoneNumber ??""),
             new Claim(nameof(UserClaimModel.Id), User.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
 
         };
 
-        foreach (var role in Roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
+        claims.Add(new Claim(ClaimTypes.Role, role));
+
 
         return claims;
     }
@@ -188,11 +196,15 @@ public class AuthService : IAuthService
             ClockSkew = TimeSpan.Zero
         };
     }
-    private async Task<(JwtSecurityToken, string)> _GenerateAccessToken(User User)
+    private (JwtSecurityToken, string) _GenerateAccessToken(User User)
     {
-        List<string> roles = await _userService.GetUserRolesAsync(User);
 
-        var claims = _GenerateUserClaims(User, roles);
+        string role = User.Role?.Name;
+        if (string.IsNullOrEmpty(role))
+        {
+            throw new InvalidOperationException(_Localizer[SharedResorucesKeys.RoleNotAssigned]);
+        }
+        var claims = _GenerateUserClaims(User, role);
 
         JwtSecurityToken Obj = _GetJwtSecurityToken(claims);
 
@@ -204,6 +216,7 @@ public class AuthService : IAuthService
     #endregion
 
     #region RefreshToken Methods
+
     private RefreshToken _GenerateRefreshToken(User User)
     {
         return new RefreshToken()
@@ -213,6 +226,59 @@ public class AuthService : IAuthService
             ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDate)
         };
     }
+
+    #endregion
+
+    #region Sign In methods
+
+    private static JwtAuthResult _GetJwtAuthResult(string jwtAccessTokenString, RefreshToken refreshTokenObj)
+    {
+
+
+        return new JwtAuthResult
+        {
+            AccessToken = jwtAccessTokenString,
+            RefreshToken = refreshTokenObj
+        };
+    }
+    private UserRefreshToken _GetUserRefreshToken(User User, JwtSecurityToken jwtAccessTokenObj, string jwtAccessTokenString, RefreshToken refreshTokenObj)
+    {
+
+        return new UserRefreshToken
+        {
+            UserId = User.Id,
+            AccessToken = jwtAccessTokenString,
+            RefreshToken = HashString(refreshTokenObj.Value),
+            JwtId = jwtAccessTokenObj.Id,
+            IsUsed = true,
+            IsRevoked = false,
+            CreatedAt = DateTime.UtcNow,
+            ExpiryDate = refreshTokenObj.ExpiresAt,
+        };
+    }
+
+    #endregion
+
+    #region Sign Up methods
+    private async Task<Result<string>> _CheckIfUserExists(string email)
+    {
+        var existingUser = await _userService.GetUserByEmailAsync(email).FirstOrDefaultAsync();
+        return existingUser == null
+            ? Result<string>.Success(string.Empty)
+            : Result<string>.Failure(new List<string> { _Localizer[SharedResorucesKeys.EmailAlreadyExists] });
+    }
+
+    private async Task<Result<string>> _CreateUser(User user, string password)
+    {
+        user.RoleID = _roleManager.Roles.FirstOrDefault(r => r.Name.Equals(Roles.Member))?.Id ?? throw new InvalidOperationException("Role not found");
+        var result = await _userService.CreateUserAsync(user, password);
+
+        if (result.Succeeded) return Result<string>.Success(string.Empty);
+
+        var errors = result.Errors.Select(e => e.Description).ToList();
+        return Result<string>.Failure(errors);
+    }
+
 
     #endregion
 
@@ -234,6 +300,8 @@ public class AuthService : IAuthService
             return Convert.ToBase64String(hashedBytes);
         }
     }
+
+
     #endregion
 
 }

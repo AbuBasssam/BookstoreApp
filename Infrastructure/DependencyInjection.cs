@@ -1,6 +1,8 @@
 ﻿using Application.Interfaces;
 using Domain.Entities;
 using Infrastructure.Repositories;
+using Infrastructure.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +21,9 @@ public static class DependencyInjection
         IdentityRegisteration(services);
 
         RepsitoriesRegisteration(services);
+
+        // Register the custom authorization handlers
+        AddHandlers(services);
 
 
         return services;
@@ -72,5 +77,10 @@ public static class DependencyInjection
 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
+    }
+    private static void AddHandlers(IServiceCollection services)
+    {
+        // Add your custom authorization handlers here
+        services.AddScoped<IAuthorizationHandler, VerificationOnlyHandler>();
     }
 }
