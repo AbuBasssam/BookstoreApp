@@ -1,10 +1,12 @@
 ﻿using Application.Features.AuthFeature;
+using Application.Models;
 using Domain.AppMetaData;
 using Domain.HelperClasses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Extensions;
+using Presentation.Helpers;
 
 namespace Presentation.Controller;
 public class AuthController : ApiController
@@ -18,8 +20,12 @@ public class AuthController : ApiController
     [AllowAnonymous]
     public async Task<IActionResult> SignIn([FromBody] SignInCommand command)
     {
-        var response = await Sender.Send(command);
-        return NewResult(response);
+
+        return await CommandExecutor.Execute(
+            command,
+            Sender,
+            (Response<JwtAuthResult> response) => NewResult(response)
+        );
     }
 
 
@@ -30,9 +36,12 @@ public class AuthController : ApiController
     [AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpCommandDTO dto)
     {
-        SignUpCommand command = new SignUpCommand(dto);
-        var response = await Sender.Send(command);
-        return NewResult(response);
+
+        return await CommandExecutor.Execute(
+            new SignUpCommand(dto),
+            Sender,
+            (Response<string> response) => NewResult(response)
+        );
     }
 
 
@@ -42,11 +51,16 @@ public class AuthController : ApiController
     [Authorize(Policy = Policies.VerificationOnly)]
     public async Task<IActionResult> SendEmailConfirmationOtp()
     {
+
         var verificationToken = HttpContext.GetAuthToken();
 
-        // If the verification token is null or empty, return Unauthorized else execute the command
-        return string.IsNullOrWhiteSpace(verificationToken) ? Unauthorized() : await _ExecuteCommand(verificationToken);
-
+        return string.IsNullOrWhiteSpace(verificationToken) ?
+            Unauthorized() :
+            await CommandExecutor.Execute(
+                new SendEmailConfirmationCodeCommand(verificationToken),
+                Sender,
+                (Response<string> response) => NewResult(response)
+            );
 
     }
 
@@ -57,30 +71,17 @@ public class AuthController : ApiController
     [Authorize(Policy = Policies.VerificationOnly)]
     public async Task<IActionResult> VerifyEmailConfirmationOtp([FromBody] ConfirmEmailOtpDto confirmationCode)
     {
+
         var verificationToken = HttpContext.GetAuthToken();
 
-        if (string.IsNullOrWhiteSpace(verificationToken))
-            return Unauthorized();
-
-        ConfirmEmailCommand command = new ConfirmEmailCommand
-        {
-            VerificationToken = verificationToken,
-            ConfirmationCode = confirmationCode.ConfirmationCode
-        };
-
-        var response = await Sender.Send(command);
-        return NewResult(response);
+        return string.IsNullOrWhiteSpace(verificationToken) ?
+            Unauthorized() :
+            await CommandExecutor.Execute(
+                new ConfirmEmailCommand { VerificationToken = verificationToken, ConfirmationCode = confirmationCode.ConfirmationCode },
+                Sender,
+                (Response<bool> response) => NewResult(response)
+            );
     }
 
-    #region  Helpers
 
-    private async Task<IActionResult> _ExecuteCommand(string verificationToken)
-    {
-        var command = new SendEmailConfirmationCodeCommand(verificationToken);
-
-        var response = await Sender.Send(command);
-        return NewResult(response);
-    }
-
-    #endregion
 }
