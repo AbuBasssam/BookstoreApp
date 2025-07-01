@@ -1,8 +1,12 @@
-﻿using Application.Interfaces;
+﻿using Application.Behaviors;
+using Application.Interfaces;
+using Application.Models;
 using Application.Services;
 using ApplicationLayer.Resources;
 using Domain.HelperClasses;
 using Domain.Security;
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
 
+
 namespace Application;
 
 public static class DependencyInjection
@@ -20,14 +25,20 @@ public static class DependencyInjection
     {
 
         JWTAuthentication(services, configuration);
+
         ServicesRegisteration(services);
+
         EmailSetting(services, configuration);
 
+        FluentValidatorConfiguration(services);
+
         // add authorization policies
-        AddPolicies(services);
+        _AddPolicies(services);
 
         // Configuration for MediaR
         services.AddMediatR(_getMediatRServiceConfiguration);
+
+        services.AddTransient<ResponseHandler>();
 
 
         //Localization
@@ -93,7 +104,7 @@ public static class DependencyInjection
 
     }
 
-    public static void AddPolicies(this IServiceCollection services)
+    private static void _AddPolicies(this IServiceCollection services)
     {
         // add policies for authorization
         services.AddAuthorization(options =>
@@ -125,6 +136,16 @@ public static class DependencyInjection
 
         services.AddSingleton(EmailSetting);
     }
+
     private static void _getMediatRServiceConfiguration(MediatRServiceConfiguration config)
         => config.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
+
+    private static void FluentValidatorConfiguration(IServiceCollection services)
+    {
+        //Configuration for FluentValidator
+
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+    }
 }

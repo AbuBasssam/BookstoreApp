@@ -161,7 +161,7 @@
     <value>مطلوب</value>
   </data>
   <data name="Success" xml:space="preserve">
-    <value>نجح</value>
+    <value>نجاح</value>
   </data>
   <data name="Unauthorized" xml:space="preserve">
     <value>غير مخول</value>

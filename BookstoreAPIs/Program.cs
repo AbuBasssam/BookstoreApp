@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using Presentation;
+using PresentationLayer.Middleware;
+using Serilog;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,10 +61,10 @@ builder.Services
 
 #region Serilog
 
-/*Log.Logger = new LoggerConfiguration().ReadFrom
+Log.Logger = new LoggerConfiguration().ReadFrom
       .Configuration(builder.Configuration)
       .CreateLogger();
-builder.Services.AddSerilog();*/
+builder.Services.AddSerilog();
 
 #endregion
 
@@ -90,7 +92,11 @@ var options = app.Services.GetService<IOptions<RequestLocalizationOptions>>();
 app.UseRequestLocalization(options.Value);
 #endregion
 
+#region Middlewares
 
+app.UseMiddleware<ErrorHandlerMiddleware>();
+
+#endregion
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
