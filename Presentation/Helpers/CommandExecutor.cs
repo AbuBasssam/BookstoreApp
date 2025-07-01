@@ -15,14 +15,4 @@ public static class CommandExecutor
         return resultBuilder(response);
     }
 }
-//public static class CommandExecutor
-//{
-//    public static async Task<IActionResult> Execute<TCommand>(
-//        TCommand command,
-//        ISender sender,
-//        Func<object, IActionResult> resultBuilder)
-//    {
-//        var response = await sender.Send(command);
-//        return resultBuilder(response);
-//    }
-//}
+
