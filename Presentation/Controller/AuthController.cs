@@ -4,6 +4,7 @@ using Domain.HelperClasses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.Extensions;
 
 namespace Presentation.Controller;
 public class AuthController : ApiController
@@ -33,4 +34,30 @@ public class AuthController : ApiController
         var response = await Sender.Send(command);
         return NewResult(response);
     }
+
+
+    [HttpPost(Router.AuthenticationRouter.ConfirmEmailCode)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [Authorize(Policy = Policies.VerificationOnly)]
+    public async Task<IActionResult> SendEmailConfirmationOtp()
+    {
+        var verificationToken = HttpContext.GetAuthToken();
+
+        // If the verification token is null or empty, return Unauthorized else execute the command
+        return string.IsNullOrWhiteSpace(verificationToken) ? Unauthorized() : await _ExecuteCommand(verificationToken);
+
+
+    }
+    #region  Helpers
+
+    private async Task<IActionResult> _ExecuteCommand(string verificationToken)
+    {
+        var command = new SendEmailConfirmationCodeCommand(verificationToken);
+
+        var response = await Sender.Send(command);
+        return NewResult(response);
+    }
+
+    #endregion
 }
