@@ -30,6 +30,8 @@
         public const string TokenRequired = "TokenRequired";
         public const string CodeRequired = "CodeRequired";
         public const string NameRequired = "NameRequired";
+        public const string NameNoSpacesAllowed = "NameNoSpacesAllowed";
+        public const string NameInvalidCharacters = "NameInvalidCharacters";
         public const string GoogleIdTokenRequired = "GoogleIdTokenRequired";
         public const string RequestPayloadRequired = "RequestPayloadRequired";
         #endregion

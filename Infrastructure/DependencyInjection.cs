@@ -62,7 +62,10 @@ public static class DependencyInjection
             options.SignIn.RequireConfirmedEmail = true;
             options.SignIn.RequireConfirmedAccount = true;
             options.User.AllowedUserNameCharacters =
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+\r\n\r\n";
+         "abcdefghijklmnopqrstuvwxyz" +
+         "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+         "0123456789";
+
 
         })
         .AddUserManager<UserManager<User>>()

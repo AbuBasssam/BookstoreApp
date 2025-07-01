@@ -34,7 +34,6 @@
 
   <ItemGroup>
     <Folder Include="Features\AuthFeature\Queries\" />
-    <Folder Include="Validations\" />
   </ItemGroup>
 
 </Project>

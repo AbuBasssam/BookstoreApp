@@ -258,4 +258,13 @@
   <data name="InvalidGoogleToken" xml:space="preserve">
     <value>Invalid Google token</value>
   </data>
+  <data name="NameNoSpacesAllowed" xml:space="preserve">
+    <value>Name cannot contain spaces</value>
+  </data>
+  <data name="آشةثNoSpacesAllowed" xml:space="preserve">
+    <value>{PropertyName} cannot contain spaces</value>
+  </data>
+  <data name="NameInvalidCharacters" xml:space="preserve">
+    <value>Name can only contain letters and numbers</value>
+  </data>
 </root>

@@ -38,6 +38,9 @@ public static class DependencyInjection
         // Configuration for MediaR
         services.AddMediatR(_getMediatRServiceConfiguration);
 
+        //Configuration for AutoMapper
+        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
         services.AddTransient<ResponseHandler>();
 
 
