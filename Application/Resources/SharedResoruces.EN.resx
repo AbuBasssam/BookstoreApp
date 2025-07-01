@@ -261,10 +261,13 @@
   <data name="NameNoSpacesAllowed" xml:space="preserve">
     <value>Name cannot contain spaces</value>
   </data>
-  <data name="آشةثNoSpacesAllowed" xml:space="preserve">
-    <value>{PropertyName} cannot contain spaces</value>
-  </data>
   <data name="NameInvalidCharacters" xml:space="preserve">
     <value>Name can only contain letters and numbers</value>
+  </data>
+  <data name="AccessDeniedGeneric" xml:space="preserve">
+    <value>Access denied. You are not authorized.</value>
+  </data>
+  <data name="AccessDeniedSimple" xml:space="preserve">
+    <value>Access denied.</value>
   </data>
 </root>

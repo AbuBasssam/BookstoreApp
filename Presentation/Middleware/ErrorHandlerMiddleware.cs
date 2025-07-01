@@ -32,6 +32,7 @@ public class ErrorHandlerMiddleware
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; // Change 403 to 401
 
                 var responseModel = new ResponseBuilder<string>()
+                    .WithStatusCode(HttpStatusCode.Unauthorized)
                     .WithSuccess(false)
                     .WithMessage("Access denied. You are not authorized.")
                     .WithErrors(new List<string> { "Access denied." })

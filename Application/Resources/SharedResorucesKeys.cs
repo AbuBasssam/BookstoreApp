@@ -48,6 +48,8 @@
         public const string InvalidGoogleToken = "InvalidGoogleToken";
         public const string ErrorConfirmingResetPasswordCode = "ErrorConfirmingResetPasswordCode";
         public const string ErrorResettingPassword = "ErrorResettingPassword";
+        public const string AccessDeniedGeneric = "AccessDeniedGeneric";
+        public const string AccessDeniedSimple = "AccessDeniedSimple";
         #endregion
 
         #region User Management Keys

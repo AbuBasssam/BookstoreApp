@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Application.Models;
 using Application.Services;
 using ApplicationLayer.Resources;
+using Domain.AppMetaData;
 using Domain.HelperClasses;
 using Domain.Security;
 using FluentValidation;
@@ -112,7 +113,7 @@ public static class DependencyInjection
         // add policies for authorization
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("VerificationOnly", policy =>
+            options.AddPolicy(Policies.VerificationOnly, policy =>
                 policy.Requirements.Add(new VerificationOnlyRequirement()));
         });
 

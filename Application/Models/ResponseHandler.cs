@@ -103,47 +103,6 @@ public class ResponseHandler
             .Build();
     }
 
-    /* Old versions
-    public Response<T> Unauthorized<T>()
-    => new ResponseBuilder<T>()
-            .WithStatusCode(HttpStatusCode.Unauthorized)
-            .WithSuccess(false)
-            .WithMessage(_stringLocalizer[SharedResorucesKeys.Unauthorized])
-            .Build();
-
-
-    public Response<T> BadRequest<T>(string? message = null)
-
-      => new ResponseBuilder<T>()
-           .WithStatusCode(HttpStatusCode.BadRequest)
-           .WithSuccess(false)
-           .WithMessage(message ?? _stringLocalizer[SharedResorucesKeys.BadRequest])
-           .Build();
-
-
-    public Response<T> UnprocessableEntity<T>(string? message = null)
-       => new ResponseBuilder<T>()
-           .WithStatusCode(HttpStatusCode.UnprocessableEntity)
-           .WithSuccess(false)
-           .WithMessage(message ?? _stringLocalizer[SharedResorucesKeys.UnprocessableEntity])
-           .Build();
-
-
-    public Response<T> NotFound<T>(string? message = null)
-        => new ResponseBuilder<T>()
-            .WithStatusCode(HttpStatusCode.NotFound)
-            .WithSuccess(false)
-            .WithMessage(message ?? _stringLocalizer[SharedResorucesKeys.NotFound])
-            .Build();
-
-    public Response<T> InternalServerError<T>(string? message = null)
-
-     => new ResponseBuilder<T>()
-          .WithStatusCode(HttpStatusCode.InternalServerError)
-          .WithSuccess(false)
-          .WithMessage(message ?? _stringLocalizer[SharedResorucesKeys.InternalServerError])
-          .Build();
-    */
 
     public Response<T> Created<T>(T entity, object? meta = null)
         => new ResponseBuilder<T>()

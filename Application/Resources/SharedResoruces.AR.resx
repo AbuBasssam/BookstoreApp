@@ -270,4 +270,10 @@
   <data name="NameInvalidCharacters" xml:space="preserve">
     <value>يجب أن يحتوي الاسم على أحرف وأرقام فقط</value>
   </data>
+  <data name="AccessDeniedGeneric" xml:space="preserve">
+    <value>تم الرفض. أنت غير مخوّل.</value>
+  </data>
+  <data name="AccessDeniedSimple" xml:space="preserve">
+    <value>تم الرفض.</value>
+  </data>
 </root>
