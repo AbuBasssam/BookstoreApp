@@ -49,6 +49,29 @@ public class AuthController : ApiController
 
 
     }
+
+
+    [HttpPost(Router.AuthenticationRouter.VerifyEmailCode)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [Authorize(Policy = Policies.VerificationOnly)]
+    public async Task<IActionResult> VerifyEmailConfirmationOtp([FromBody] ConfirmEmailOtpDto confirmationCode)
+    {
+        var verificationToken = HttpContext.GetAuthToken();
+
+        if (string.IsNullOrWhiteSpace(verificationToken))
+            return Unauthorized();
+
+        ConfirmEmailCommand command = new ConfirmEmailCommand
+        {
+            VerificationToken = verificationToken,
+            ConfirmationCode = confirmationCode.ConfirmationCode
+        };
+
+        var response = await Sender.Send(command);
+        return NewResult(response);
+    }
+
     #region  Helpers
 
     private async Task<IActionResult> _ExecuteCommand(string verificationToken)
