@@ -31,6 +31,7 @@ public static class DependencyInjection
 
         return services;
     }
+
     private static void JWTAuthentication(IServiceCollection services, IConfiguration configuration)
     {
         //JWT Authentication
@@ -49,6 +50,7 @@ public static class DependencyInjection
             .AddAuthentication(_authenticationInfo)
             .AddJwtBearer(option => { _JwtBearerInfo(option, JwtSettings); });
     }
+
     private static void _JwtBearerInfo(JwtBearerOptions option, JwtSettings JwtSettings)
     {
         var validationParameters = new TokenValidationParameters
@@ -67,18 +69,25 @@ public static class DependencyInjection
 
         option.TokenValidationParameters = validationParameters;
     }
+
     private static void _authenticationInfo(AuthenticationOptions option)
     {
         option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     }
+
     private static void ServicesRegisteration(IServiceCollection services)
     {
         services.AddScoped<IUserService, UserService>();
+
         services.AddScoped<IAuthService, AuthService>();
+
+        services.AddScoped<IEmailsService, EmailsService>();
+
 
 
     }
+
     public static void AddPolicies(this IServiceCollection services)
     {
         // add policies for authorization
@@ -89,6 +98,7 @@ public static class DependencyInjection
         });
 
     }
+
     private static void EmailSetting(IServiceCollection services, IConfiguration configuration)
     {
         //way 1: Using IOptions<T>

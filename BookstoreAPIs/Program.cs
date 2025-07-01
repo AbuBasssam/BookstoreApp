@@ -1,3 +1,4 @@
+using Application;
 using Domain.Entities;
 using Infrastructure;
 using Infrastructure.Seeder;
@@ -17,8 +18,8 @@ builder.Services.AddSwaggerGen();
 #region Dependency injections
 
 builder.Services
-.registerInfrastructureDependencies(builder.Configuration);
-//.registerApplicationDependencies(builder.Configuration);
+.registerInfrastructureDependencies(builder.Configuration)
+.registerApplicationDependencies(builder.Configuration);
 
 #endregion
 

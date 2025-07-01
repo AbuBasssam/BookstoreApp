@@ -1,7 +1,9 @@
 ﻿using Application.Interfaces;
 using Domain.Entities;
+using Implementations;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
+using Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -76,6 +78,9 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+        services.AddScoped<IOtpRepsitory, OtpRepository>();
+
 
     }
     private static void AddHandlers(IServiceCollection services)
