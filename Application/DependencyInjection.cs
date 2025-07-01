@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
+using System.Reflection;
 using System.Text;
 
 namespace Application;
@@ -24,6 +25,10 @@ public static class DependencyInjection
 
         // add authorization policies
         AddPolicies(services);
+
+        // Configuration for MediaR
+        services.AddMediatR(_getMediatRServiceConfiguration);
+
 
         //Localization
         services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -120,4 +125,6 @@ public static class DependencyInjection
 
         services.AddSingleton(EmailSetting);
     }
+    private static void _getMediatRServiceConfiguration(MediatRServiceConfiguration config)
+        => config.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
 }

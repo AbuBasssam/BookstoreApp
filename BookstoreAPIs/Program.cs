@@ -5,6 +5,7 @@ using Infrastructure.Seeder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
+using Presentation;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,14 +47,14 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 #endregion
 
-// Controller of presentation layer
-#region Undefined Region
-/*var presentationAssembly = typeof(AssemblyReference).Assembly;
+#region Register Presentation Layer Controllers
+
+var presentationAssembly = typeof(AssemblyReference).Assembly;
 
 builder.Services
     .AddControllers()
-    .AddApplicationPart(presentationAssembly); 
-*/
+    .AddApplicationPart(presentationAssembly);
+
 #endregion
 
 #region Serilog
