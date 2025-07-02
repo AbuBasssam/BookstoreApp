@@ -85,4 +85,19 @@ public class AuthController : ApiController
     }
 
 
+    [HttpPost(Router.AuthenticationRouter.ResetPasswordCode)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPasswordCode([FromBody] SendResetPasswordCodeCommand command)
+    {
+        return await CommandExecutor.Execute(
+                command,
+                Sender,
+                (Response<string> response) => NewResult(response)
+        );
+
+    }
+
+
 }

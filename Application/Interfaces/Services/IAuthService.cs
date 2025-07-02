@@ -9,5 +9,6 @@ public interface IAuthService
     Task<Result<string>> SignUp(User newUser, string password);
     Task<Result<string>> SendEmailConfirmationCode(string token);
     Task<Result<string>> ConfirmEmail(string verificationToken, string Code);
+    Task<Result<string>> SendResetPasswordCode(string email);
 
 }
