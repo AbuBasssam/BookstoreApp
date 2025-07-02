@@ -14,10 +14,11 @@ public class SensitiveRateLimitingMiddleware
     // Use route constants from Router class and normalize keys
     private readonly Dictionary<string, (int Limit, TimeSpan Window)> _endpointRateLimits = new()
     {
-        { Normalize(Router.AuthenticationRouter.ConfirmEmailCode), (5, TimeSpan.FromMinutes(3)) },
-        { Normalize(Router.AuthenticationRouter.VerifyResetPasswordCode), (3, TimeSpan.FromMinutes(5)) },
-        { Normalize(Router.AuthenticationRouter.ResetPasswordCode), (5, TimeSpan.FromMinutes(5)) },
-        { Normalize(Router.AuthenticationRouter.VerifyEmailCode), (3, TimeSpan.FromMinutes(5)) }
+        { Normalize( Router.AuthenticationRouter.ConfirmEmailCode), (5, TimeSpan.FromMinutes(3)) },
+        { Normalize( Router.AuthenticationRouter.VerifyResetPasswordCode), (3, TimeSpan.FromMinutes(5)) },
+        { Normalize( Router.AuthenticationRouter.ResetPasswordCode), (5, TimeSpan.FromMinutes(5)) },
+        { Normalize( Router.AuthenticationRouter.VerifyEmailCode), (3, TimeSpan.FromMinutes(5)) },
+
     };
 
     public SensitiveRateLimitingMiddleware(RequestDelegate next)
@@ -46,7 +47,7 @@ public class SensitiveRateLimitingMiddleware
                     if (now > current.ResetTime)
                         return (1, now.Add(rateLimit.Window)); // Reset if expired
 
-                    if (current.Count < rateLimit.Limit)
+                    if (current.Count <= rateLimit.Limit)
                         return (current.Count + 1, current.ResetTime); // Increment if allowed
 
                     return current; // Block if over limit
@@ -64,13 +65,16 @@ public class SensitiveRateLimitingMiddleware
         await _next(context);
     }
 
-
     /// <summary>
     ///Normalizes a route to lowercase and trims trailing slash
     /// </summary>
     private static string Normalize(string? path)
     {
-        return path?.ToLowerInvariant().TrimEnd('/') ?? "/";
+        if (string.IsNullOrEmpty(path)) return "/";
+
+        path = path.ToLowerInvariant().TrimEnd('/');
+
+        return path.StartsWith('/') ? path : "/" + path;
     }
 
 

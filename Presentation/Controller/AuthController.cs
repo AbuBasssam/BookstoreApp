@@ -33,6 +33,7 @@ public class AuthController : ApiController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpCommandDTO dto)
     {
@@ -69,6 +70,7 @@ public class AuthController : ApiController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [Authorize(Policy = Policies.VerificationOnly)]
     public async Task<IActionResult> VerifyEmailConfirmationOtp([FromBody] ConfirmEmailOtpDto confirmationCode)
     {

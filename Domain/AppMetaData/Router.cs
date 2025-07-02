@@ -46,5 +46,12 @@ public static class Router
     }
 
     #endregion
+    public class TestRouter()
+    {
+        public const string BASE = _rule + "/test";
+        public const string Global = BASE + "/global";
+        public const string Sensitive = "/" + BASE + "/sensitive";
+    }
+
 
 }
