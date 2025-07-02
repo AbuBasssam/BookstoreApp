@@ -90,5 +90,6 @@ public static class DependencyInjection
     {
         // Add your custom authorization handlers here
         services.AddScoped<IAuthorizationHandler, VerificationOnlyHandler>();
+        services.AddScoped<IAuthorizationHandler, ResetPasswordOnlyHandler>();
     }
 }

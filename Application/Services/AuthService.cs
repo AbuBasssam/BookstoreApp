@@ -24,6 +24,7 @@ public class AuthService : IAuthService
     private readonly JwtSettings _jwtSettings;
     private readonly IUserService _userService;
     private readonly IEmailsService _emailsService;
+    private readonly ISessionTokenService _sessionTokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepo;
     private readonly IOtpRepsitory _otpRepo;
     private readonly IUnitOfWork _unitOfWork;
@@ -31,7 +32,6 @@ public class AuthService : IAuthService
     private readonly IStringLocalizer<SharedResources> _Localizer;
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
-    private readonly SessionTokenService _verificationTokenService;
     private static string _SecurityAlgorithm = SecurityAlgorithms.HmacSha256Signature;
     private static JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
 
@@ -39,7 +39,7 @@ public class AuthService : IAuthService
     #endregion
 
     #region Constructor(s)
-    public AuthService(JwtSettings jwtSettings, IUserService userService, IEmailsService emailsService, IRefreshTokenRepository refreshTokenRepo, IOtpRepsitory otpRepo,
+    public AuthService(JwtSettings jwtSettings, IUserService userService, ISessionTokenService sessionTokenService, IEmailsService emailsService, IRefreshTokenRepository refreshTokenRepo, IOtpRepsitory otpRepo,
         UserManager<User> userManager, IUnitOfWork unitOfWork, IStringLocalizer<SharedResources> localizer, RoleManager<Role> roleManager)
     {
         _jwtSettings = jwtSettings;
@@ -52,7 +52,7 @@ public class AuthService : IAuthService
         _userManager = userManager;
         _roleManager = roleManager;
         _signaturekey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.Secret!));
-        _verificationTokenService = new SessionTokenService(jwtSettings);
+        _sessionTokenService = sessionTokenService;
     }
     #endregion
 
@@ -161,7 +161,7 @@ public class AuthService : IAuthService
             User user = validateResult.data!;
 
             // Step 2: Handle OTP expiration and cooldown
-            var otpValidationResult = await ValidateOtpLifecycleAsync(email, user.Id, 2, enOtpType.ConfirmEmail);
+            var otpValidationResult = await _ValidateOtpLifecycleAsync(email, user.Id, 2, enOtpType.ConfirmEmail);
 
             if (!otpValidationResult.IsSuccess) return otpValidationResult;
 
@@ -246,6 +246,59 @@ public class AuthService : IAuthService
         {
             Log.Error(ex, messageTemplate: ex.Message);
             return Result<string>.Failure([_Localizer[SharedResorucesKeys.InvalidExpiredCode]]);
+        }
+    }
+
+    public async Task<Result<string>> SendResetPasswordCode(string email)
+    {
+        try
+        {
+            // Step 1: Validate that the user exists.
+            var validateResult = await _ValidateUserExists(email);
+
+            // For security, return a generic success message if user not found.
+            if (!validateResult.IsSuccess) return Result<string>.Success(_Localizer[SharedResorucesKeys.Success]);
+
+            User user = validateResult.data;
+
+            // Step 2: Validate and expire any old OTP for reset password.
+            var otpValidationResult = await _ValidateOtpLifecycleAsync(email, user.Id, 1, enOtpType.ResetPassword);
+
+            if (!otpValidationResult.IsSuccess) return Result<string>.Failure(otpValidationResult.Errors);
+
+            // Step 3: Generate OTP and message
+            string otpCode = _GenerateOTPCode();
+
+            string message = $"Your reset password code is: {otpCode}";
+
+            // Step 4: Send OTP code via email.
+            await SendOtpEmail(user.Email!, otpCode, "Reset Password");
+
+            // Step 5: Generate session token 
+            UserRefreshToken sessionToken = _GenerateResetPasswordToken(user, 3);
+
+            // Step 6: Save OTP & reset password token in the database.
+            int minutesValidDuration = 3;
+            await _SaveOtpToDb(user.Id, otpCode, enOtpType.ResetPassword, minutesValidDuration);
+
+            await _refreshTokenRepo.AddAsync(sessionToken);
+
+            // Step 7: Commit all changes.
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<string>.Success(sessionToken.AccessToken!);
+
+
+
+
+
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, messageTemplate: ex.Message);
+
+            return Result<string>.Success(string.Empty);
         }
     }
 
@@ -466,7 +519,7 @@ public class AuthService : IAuthService
 
     }
 
-    private async Task<Result<string>> ValidateOtpLifecycleAsync(string email, int userId, int minutesCooldownPeriod, enOtpType otpType)
+    private async Task<Result<string>> _ValidateOtpLifecycleAsync(string email, int userId, int minutesCooldownPeriod, enOtpType otpType)
     {
         var oldOtp = await _GetLastCode(email, otpType);
 
@@ -560,9 +613,30 @@ public class AuthService : IAuthService
 
     }
 
-    private UserRefreshToken _GenerateVerificationToken(User user, int minutesValidDuration = 3)
+    private UserRefreshToken _GenerateVerificationToken(User user, int minutesValidDuration)
     {
-        var (jwtAccessTokenObj, jwtAccessTokenString) = _verificationTokenService.GenerateVerificationToken(user, minutesValidDuration);
+        var (jwtAccessTokenObj, jwtAccessTokenString) = _sessionTokenService.GenerateVerificationToken(user, minutesValidDuration);
+
+
+        return new UserRefreshToken
+        {
+            UserId = user.Id,
+            AccessToken = jwtAccessTokenString,
+            RefreshToken = null,
+            JwtId = jwtAccessTokenObj.Id,
+            IsUsed = true,
+            IsRevoked = false,
+            CreatedAt = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddMinutes(minutesValidDuration)
+        };
+
+
+
+    }
+
+    private UserRefreshToken _GenerateResetPasswordToken(User user, int minutesValidDuration)
+    {
+        var (jwtAccessTokenObj, jwtAccessTokenString) = _sessionTokenService.GenerateResetToken(user, minutesValidDuration);
 
 
         return new UserRefreshToken

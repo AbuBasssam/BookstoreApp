@@ -18,11 +18,24 @@ public class SessionTokenService : ISessionTokenService
     }
     public (JwtSecurityToken, string) GenerateVerificationToken(User user, int expiresInMinutes)
     {
-        var claims = GetVerificationClaims(user);
+        var claims = _GetVerificationClaims(user);
+        return _GenerateToken(claims, expiresInMinutes);
+    }
+
+    public (JwtSecurityToken, string) GenerateResetToken(User user, int expiresInMinutes)
+    {
+        var claims = _GetResetClaims(user);
+
+        return _GenerateToken(claims, expiresInMinutes);
+    }
+
+    #region Helpers
+    private (JwtSecurityToken, string) _GenerateToken(List<Claim> claims, int expiresInMinutes)
+    {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSetting.Secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var obj = new JwtSecurityToken(
+        var token = new JwtSecurityToken(
             issuer: _jwtSetting.Issuer,
             audience: _jwtSetting.Audience,
             claims: claims,
@@ -30,16 +43,11 @@ public class SessionTokenService : ISessionTokenService
             signingCredentials: creds
         );
 
-        var accessToken = new JwtSecurityTokenHandler().WriteToken(obj);
-        return (obj, accessToken);
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+        return (token, accessToken);
     }
 
-    public (JwtSecurityToken, string) GenerateResetToken(User user, int expiresInMinutes)
-    {
-        throw new NotImplementedException();
-    }
-
-    private List<Claim> GetVerificationClaims(User user)
+    private List<Claim> _GetVerificationClaims(User user)
     {
         return new List<Claim>
         {
@@ -50,6 +58,20 @@ public class SessionTokenService : ISessionTokenService
 
         };
     }
+
+    private List<Claim> _GetResetClaims(User user)
+    {
+        return new List<Claim>
+        {
+            new Claim(SessionTokenClaims.IsResetToken, "true"),
+            new Claim(nameof(UserClaimModel.Id), user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email!),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+    }
+
+    #endregion
+
 }
 
 

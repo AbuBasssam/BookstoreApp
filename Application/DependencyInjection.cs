@@ -111,6 +111,8 @@ public static class DependencyInjection
 
         services.AddScoped<IEmailsService, EmailsService>();
 
+        services.AddScoped<ISessionTokenService, SessionTokenService>();
+
 
 
     }
@@ -122,7 +124,11 @@ public static class DependencyInjection
         {
             options.AddPolicy(Policies.VerificationOnly, policy =>
                 policy.Requirements.Add(new VerificationOnlyRequirement()));
+
+            options.AddPolicy(Policies.ResetPasswordOnly, policy =>
+                policy.Requirements.Add(new ResetPasswordOnlyRequirement()));
         });
+
 
     }
 
