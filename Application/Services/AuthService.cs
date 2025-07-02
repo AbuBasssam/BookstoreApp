@@ -140,7 +140,7 @@ public class AuthService : IAuthService
         try
         {
             // Step 1: Validate the session token
-            var tokenValidationResult = await _ValidateVerificationToken(token);
+            var tokenValidationResult = await _ValidateSessionToken(token);
 
             if (!tokenValidationResult.IsSuccess) return tokenValidationResult;
 
@@ -199,7 +199,7 @@ public class AuthService : IAuthService
         try
         {
             // Step 1: Validate the session token
-            var tokenValidationResult = await _ValidateVerificationToken(verificationToken);
+            var tokenValidationResult = await _ValidateSessionToken(verificationToken);
             if (!tokenValidationResult.IsSuccess) return tokenValidationResult;
 
             // Step 2: Extract email from the token
@@ -230,8 +230,8 @@ public class AuthService : IAuthService
             await _ConfirmUserEmail(user);
 
             //Step 7: Force expire the OTP.
-            otp.ExpirationTime = DateTime.UtcNow;
-            await _otpRepo.UpdateAsync(otp);
+
+            await _ExpireOTP(otp);
 
             // Step 8: Deactivate the verification token
             await _DeactiveVerificationToken(user.Id);
@@ -300,6 +300,66 @@ public class AuthService : IAuthService
 
             return Result<string>.Success(string.Empty);
         }
+    }
+
+    public async Task<Result<string>> ConfirmResetPasswordCode(string sessionToken, string code)
+    {
+        try
+        {
+            // Step 1: Validate the session token.
+            var tokenValidationResult = await _ValidateSessionToken(sessionToken);
+
+            if (!tokenValidationResult.IsSuccess) return tokenValidationResult;
+
+            // Step 2: Extract email from the token
+            var getEmailResult = _GetEmailFromSessionToken(sessionToken);
+
+            if (!getEmailResult.IsSuccess) return getEmailResult;
+
+            string email = getEmailResult.data!;
+
+            // Step 3: Retrieve the user
+            var validateResult = await _ValidateUserExists(email);
+
+            if (!validateResult.IsSuccess) return Result<string>.Failure([_Localizer[SharedResorucesKeys.UserNotFound]]);
+
+            User user = validateResult.data!;
+
+            // Step 4: Get last confirmation code
+            Otp? otp = await _GetLastCode(email, enOtpType.ResetPassword);
+
+            if (otp == null) return Result<string>.Failure([_Localizer[SharedResorucesKeys.InvalidExpiredCode]]);
+
+            // Step 5: Validate the OTP.
+            var otpValidationResult = _ValidateOtp(code, otp);
+
+            if (!otpValidationResult.IsSuccess) return otpValidationResult;
+
+            // Step 6: Expire the OTP and the active session token.
+
+            await _ExpireOTP(otp);
+
+            await _DeactiveVerificationToken(user.Id);
+
+            // Step 7: Generate a new session token for reset password.
+            var newSessionToken = _GenerateNewResetToken(user);
+
+            // Step 8: Save the new session token and commit all changes.
+            await _refreshTokenRepo.AddAsync(newSessionToken);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<string>.Success(newSessionToken.AccessToken!);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error confirming reset password code: {Message}", ex.Message);
+            return Result<string>.Failure(new List<string> { _Localizer[SharedResorucesKeys.ErrorConfirmingResetPasswordCode] });
+        }
+
+
+
+
     }
 
     #endregion
@@ -478,7 +538,7 @@ public class AuthService : IAuthService
     #endregion
 
     #region verify Email methods
-    private async Task<Result<string>> _ValidateVerificationToken(string sessionToken)
+    private async Task<Result<string>> _ValidateSessionToken(string sessionToken)
     {
 
         bool isExpired = await _refreshTokenRepo.IsTokenExpired(sessionToken);
@@ -540,8 +600,7 @@ public class AuthService : IAuthService
 
         if (!IsCodeExpired(oldOtp.ExpirationTime))
         {
-            oldOtp.ExpirationTime = DateTime.UtcNow;
-            await _otpRepo.UpdateAsync(oldOtp);
+            await _ExpireOTP(oldOtp);
 
             // Expire the session token.
             await _DeactiveVerificationToken(userId);
@@ -664,6 +723,18 @@ public class AuthService : IAuthService
 
             Result<User>.Success(user);
     }
+
+    private async Task _ExpireOTP(Otp otp)
+    {
+        otp.ExpirationTime = DateTime.UtcNow;
+        await _otpRepo.UpdateAsync(otp);
+    }
+
+    private UserRefreshToken _GenerateNewResetToken(User user)
+    {
+        return _GenerateResetPasswordToken(user, 3);
+    }
+
 
     #endregion
 
