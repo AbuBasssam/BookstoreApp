@@ -47,26 +47,27 @@ public class AuthController : ApiController
 
     [HttpPost(Router.AuthenticationRouter.ConfirmEmailCode)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [Authorize(Policy = Policies.VerificationOnly)]
+
     public async Task<IActionResult> SendEmailConfirmationOtp()
     {
 
         var verificationToken = HttpContext.GetAuthToken();
 
-        return string.IsNullOrWhiteSpace(verificationToken) ?
-            Unauthorized() :
-            await CommandExecutor.Execute(
+        return await CommandExecutor.Execute(
                 new SendEmailConfirmationCodeCommand(verificationToken),
                 Sender,
                 (Response<string> response) => NewResult(response)
-            );
+        );
 
     }
 
 
     [HttpPost(Router.AuthenticationRouter.VerifyEmailCode)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [Authorize(Policy = Policies.VerificationOnly)]
     public async Task<IActionResult> VerifyEmailConfirmationOtp([FromBody] ConfirmEmailOtpDto confirmationCode)
@@ -74,13 +75,11 @@ public class AuthController : ApiController
 
         var verificationToken = HttpContext.GetAuthToken();
 
-        return string.IsNullOrWhiteSpace(verificationToken) ?
-            Unauthorized() :
-            await CommandExecutor.Execute(
+        return await CommandExecutor.Execute(
                 new ConfirmEmailCommand { VerificationToken = verificationToken, ConfirmationCode = confirmationCode.ConfirmationCode },
                 Sender,
                 (Response<bool> response) => NewResult(response)
-            );
+        );
     }
 
 

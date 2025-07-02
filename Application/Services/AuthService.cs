@@ -28,7 +28,7 @@ public class AuthService : IAuthService
     private readonly IOtpRepsitory _otpRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly SymmetricSecurityKey _signaturekey;
-    private readonly IStringLocalizer<SharedResoruces> _Localizer;
+    private readonly IStringLocalizer<SharedResources> _Localizer;
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
     private readonly VerificationTokenService _verificationTokenService;
@@ -40,7 +40,7 @@ public class AuthService : IAuthService
 
     #region Constructor(s)
     public AuthService(JwtSettings jwtSettings, IUserService userService, IEmailsService emailsService, IRefreshTokenRepository refreshTokenRepo, IOtpRepsitory otpRepo,
-        UserManager<User> userManager, IUnitOfWork unitOfWork, IStringLocalizer<SharedResoruces> localizer, RoleManager<Role> roleManager)
+        UserManager<User> userManager, IUnitOfWork unitOfWork, IStringLocalizer<SharedResources> localizer, RoleManager<Role> roleManager)
     {
         _jwtSettings = jwtSettings;
         _userService = userService;

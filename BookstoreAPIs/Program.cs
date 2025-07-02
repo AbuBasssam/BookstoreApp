@@ -18,6 +18,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 #region Dependency injections
 
 builder.Services
@@ -45,7 +46,6 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
 });
-
 
 #endregion
 
@@ -94,9 +94,14 @@ app.UseRequestLocalization(options.Value);
 
 #region Middlewares
 
+app.UseMiddleware<GlobalRateLimitingMiddleware>();
+
+app.UseMiddleware<SensitiveRateLimitingMiddleware>();
+
 app.UseMiddleware<ErrorHandlerMiddleware>();
 
 #endregion
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

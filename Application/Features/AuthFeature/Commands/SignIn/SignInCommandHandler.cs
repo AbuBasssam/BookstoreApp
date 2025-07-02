@@ -15,13 +15,13 @@ public class SignInCommandHandler : IRequestHandler<SignInCommand, Response<JwtA
     #region Field
     private readonly IUserService _userService;
     private readonly IAuthService _authService;
-    private readonly IStringLocalizer<SharedResoruces> _Localizer;
+    private readonly IStringLocalizer<SharedResources> _Localizer;
     private readonly ResponseHandler _responseHandler;
     #endregion
 
     #region Constructor
     public SignInCommandHandler(IUserService userService, IAuthService authService,
-        IStringLocalizer<SharedResoruces> localizer, ResponseHandler responseHandler)
+        IStringLocalizer<SharedResources> localizer, ResponseHandler responseHandler)
     {
         _userService = userService;
         _authService = authService;

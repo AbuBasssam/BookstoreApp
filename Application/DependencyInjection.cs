@@ -14,6 +14,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using System.Text;
 
@@ -47,7 +49,12 @@ public static class DependencyInjection
 
         //Localization
         services.AddLocalization(options => options.ResourcesPath = "Resources");
-        services.AddScoped<IStringLocalizer<SharedResoruces>, StringLocalizer<SharedResoruces>>();
+        services.AddScoped<IStringLocalizer<SharedResources>, StringLocalizer<SharedResources>>();
+
+        services.AddSwaggerGen(_GetSecurityRequirement);
+
+
+
 
         return services;
     }
@@ -151,5 +158,28 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+    }
+    private static void SwaggerGenInfo(SwaggerGenOptions option)
+    {
+        option.SwaggerDoc("v1", new OpenApiInfo { Title = "BookstoreApp", Version = "v1" });
+        option.EnableAnnotations();
+
+        option.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer schema (e.g. Bearer your token)",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = JwtBearerDefaults.AuthenticationScheme,
+        });
+    }
+    private static void _GetSecurityRequirement(SwaggerGenOptions option)
+    {
+        var openApiReference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }; // Should match the scheme name
+        var securityScheme = new OpenApiSecurityScheme { Reference = openApiReference, Name = JwtBearerDefaults.AuthenticationScheme, In = ParameterLocation.Header };
+        var securityRequirement = new OpenApiSecurityRequirement { { securityScheme, new List<string>() } };
+        SwaggerGenInfo(option);
+        option.AddSecurityRequirement(securityRequirement);// This is a list of scopes, which is empty in this case
+
     }
 }

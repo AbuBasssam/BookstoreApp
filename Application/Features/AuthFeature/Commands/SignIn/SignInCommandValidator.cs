@@ -6,8 +6,8 @@ namespace Application.Features.AuthFeature;
 
 public class SignInCommandValidator : AbstractValidator<SignInCommand>
 {
-    private readonly IStringLocalizer<SharedResoruces> _Localizer;
-    public SignInCommandValidator(IStringLocalizer<SharedResoruces> stringLocalizer)
+    private readonly IStringLocalizer<SharedResources> _Localizer;
+    public SignInCommandValidator(IStringLocalizer<SharedResources> stringLocalizer)
     {
         _Localizer = stringLocalizer;
 

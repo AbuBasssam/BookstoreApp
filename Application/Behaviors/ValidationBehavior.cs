@@ -8,9 +8,9 @@ namespace Application.Behaviors;
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
-    private readonly IStringLocalizer<SharedResoruces> _localizer;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators, IStringLocalizer<SharedResoruces> localizer)
+    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators, IStringLocalizer<SharedResources> localizer)
     {
         _validators = validators;
         _localizer = localizer;

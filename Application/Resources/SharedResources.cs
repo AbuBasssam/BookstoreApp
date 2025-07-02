@@ -1,6 +1,6 @@
 ﻿namespace ApplicationLayer.Resources;
 
-public class SharedResoruces
+public class SharedResources
 {
 
 }

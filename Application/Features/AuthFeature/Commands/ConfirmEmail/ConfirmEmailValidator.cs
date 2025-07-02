@@ -6,9 +6,9 @@ namespace Application.Features.AuthFeature;
 
 public class ConfirmEmailValidator : AbstractValidator<ConfirmEmailCommand>
 {
-    private readonly IStringLocalizer<SharedResoruces> _Localizer;
+    private readonly IStringLocalizer<SharedResources> _Localizer;
 
-    public ConfirmEmailValidator(IStringLocalizer<SharedResoruces> localizer)
+    public ConfirmEmailValidator(IStringLocalizer<SharedResources> localizer)
     {
         _Localizer = localizer;
 
@@ -17,9 +17,6 @@ public class ConfirmEmailValidator : AbstractValidator<ConfirmEmailCommand>
 
     private void _ApplyValidations()
     {
-        RuleFor(x => x.VerificationToken)
-            .NotEmpty()
-            .WithMessage(_Localizer[SharedResorucesKeys.TokenRequired]);
 
         RuleFor(x => x.ConfirmationCode)
             .NotEmpty()

@@ -46,11 +46,11 @@ public class SignUpCommandDTO
     public class Validator : AbstractValidator<SignUpCommandDTO>
     {
         #region Field(s)
-        private readonly IStringLocalizer<SharedResoruces> _Localizer;
+        private readonly IStringLocalizer<SharedResources> _Localizer;
         #endregion
 
         #region Constructure(s)
-        public Validator(IStringLocalizer<SharedResoruces> localizer)
+        public Validator(IStringLocalizer<SharedResources> localizer)
         {
             _Localizer = localizer;
 

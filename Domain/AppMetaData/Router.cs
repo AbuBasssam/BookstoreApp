@@ -18,7 +18,7 @@ public static class Router
     #endregion
 
     #region Authentication Routes
-    public class AuthenticationRouter()
+    public class AuthenticationRouter
     {
         public const string BASE = _rule + "/authentication";
         public const string SignIn = BASE + "/signin";

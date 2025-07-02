@@ -8,13 +8,13 @@ public class SignUpCommandValidator : AbstractValidator<SignUpCommand>
 {
     #region Field(s)
 
-    private readonly IStringLocalizer<SharedResoruces> _Localizer;
+    private readonly IStringLocalizer<SharedResources> _Localizer;
 
     #endregion
 
     #region Constructor(s)
 
-    public SignUpCommandValidator(IStringLocalizer<SharedResoruces> Localizer)
+    public SignUpCommandValidator(IStringLocalizer<SharedResources> Localizer)
     {
         _Localizer = Localizer;
         ApplyValidations();

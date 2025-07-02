@@ -5,9 +5,9 @@ using System.Net;
 namespace Application.Models;
 public class ResponseHandler
 {
-    private readonly IStringLocalizer<SharedResoruces> _stringLocalizer;
+    private readonly IStringLocalizer<SharedResources> _stringLocalizer;
 
-    public ResponseHandler(IStringLocalizer<SharedResoruces> stringLocalizer)
+    public ResponseHandler(IStringLocalizer<SharedResources> stringLocalizer)
     {
         _stringLocalizer = stringLocalizer;
     }
