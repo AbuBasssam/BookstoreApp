@@ -72,13 +72,13 @@ public class AuthController : ApiController
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [Authorize(Policy = Policies.VerificationOnly)]
-    public async Task<IActionResult> VerifyEmailConfirmationOtp([FromBody] ConfirmEmailOtpDto confirmationCode)
+    public async Task<IActionResult> VerifyEmailConfirmationOtp([FromBody] ConfirmEmailOtpDto confirmationDto)
     {
 
         var verificationToken = HttpContext.GetAuthToken();
 
         return await CommandExecutor.Execute(
-                new ConfirmEmailCommand { VerificationToken = verificationToken, ConfirmationCode = confirmationCode.ConfirmationCode },
+                new ConfirmEmailCommand { VerificationToken = verificationToken, ConfirmationCode = confirmationDto.ConfirmationCode },
                 Sender,
                 (Response<bool> response) => NewResult(response)
         );
@@ -93,6 +93,22 @@ public class AuthController : ApiController
     {
         return await CommandExecutor.Execute(
                 command,
+                Sender,
+                (Response<string> response) => NewResult(response)
+        );
+
+    }
+    [HttpPost(Router.AuthenticationRouter.VerifyResetPasswordCode)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [Authorize(Policy = Policies.ResetPasswordOnly)]
+    public async Task<IActionResult> VerifyResetPassword([FromBody] VerifyResetPasswordOtpDto confirmationDto)
+    {
+        var sessionToken = HttpContext.GetAuthToken();
+
+        return await CommandExecutor.Execute(
+                new VerifyResetPasswordCodeCommand(sessionToken, confirmationDto.ConfirmationCode),
                 Sender,
                 (Response<string> response) => NewResult(response)
         );
