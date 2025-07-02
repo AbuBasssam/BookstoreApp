@@ -410,6 +410,33 @@ public class AuthService : IAuthService
 
     }
 
+    public async Task<(UserRefreshToken?, Exception?)> ValidateRefreshToken(int UserId, string AccessTokenStr, string RefreshTokenStr)
+    {
+        var hashedRefreshTokenStr = HashString(RefreshTokenStr);
+
+        var refreshTokenEntity = await _refreshTokenRepo
+            .GetTableNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.UserId == UserId &&
+                x.AccessToken!.Equals(AccessTokenStr) &&
+                x.RefreshToken!.Equals(hashedRefreshTokenStr)
+            );
+
+        if (refreshTokenEntity == null)
+            return (null, new SecurityTokenArgumentException(_Localizer[SharedResorucesKeys.NullRefreshToken]));//"Refresh token entity is null"
+
+        if (refreshTokenEntity.ExpiryDate < DateTime.UtcNow)
+        {
+            refreshTokenEntity.IsRevoked = true;
+            refreshTokenEntity.IsUsed = false;
+            await _refreshTokenRepo.UpdateAsync(refreshTokenEntity);
+            return (null, new SecurityTokenArgumentException(_Localizer[SharedResorucesKeys.RevokedRefreshToken]));//"Revoked refresh token"
+        }
+
+        return (refreshTokenEntity, null);
+    }
+
+
     #endregion
 
     #region Reset Password Methods
@@ -525,6 +552,15 @@ public class AuthService : IAuthService
 
         return (Obj, Value);
     }
+
+    public (int, Exception?) GetUserIdFromJwtAccessTokenObj(JwtSecurityToken jwtAccessTokenObj)
+    {
+        if (!int.TryParse(jwtAccessTokenObj.Claims.FirstOrDefault(x => x.Type == nameof(UserClaimModel.Id))?.Value, out int UserId))
+            return (0, new ArgumentNullException(_Localizer[SharedResorucesKeys.InvalidUserId])); //"Invalid user id"
+
+        return (UserId, null);
+    }
+
 
     public (string, Exception?) GetUserEmailFromJwtAccessTokenObj(JwtSecurityToken jwtAccessTokenObj)
     {
@@ -829,10 +865,5 @@ public class AuthService : IAuthService
     }
 
     #endregion
-
-
-
-
-
 
 }

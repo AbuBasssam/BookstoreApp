@@ -136,4 +136,29 @@ public class AuthController : ApiController
 
     }
 
+
+
+    [HttpPost(Router.AuthenticationRouter.RefreshToken)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetRefreshToken([FromBody] RefreshTokenCommand command)
+    {
+        var response = await Sender.Send(command);
+        return NewResult(response);
+    }
+
+    [HttpPost(Router.AuthenticationRouter.ValidateRefreshToken)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ValidateRefreshToken([FromRoute] string token)
+    {
+        return await CommandExecutor.Execute(
+                new AuthorizeUserQuery { AccessToken = token },
+                Sender,
+                (Response<string> response) => NewResult(response)
+        );
+
+    }
+
 }

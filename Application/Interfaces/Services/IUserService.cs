@@ -5,6 +5,8 @@ namespace Application.Interfaces;
 
 public interface IUserService
 {
+    IQueryable<User> GetUserById(int Id);
+
     IQueryable<User> GetUserByEmailAsync(string email);
     Task<IdentityResult> CreateUserAsync(User user, string password);
 

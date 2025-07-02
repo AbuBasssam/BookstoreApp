@@ -21,6 +21,11 @@ public class UserService : IUserService
     #region Action Method(s)
 
     //User Manager part
+
+    public IQueryable<User> GetUserById(int Id)
+    {
+        return _userManager.Users.Where(x => x.Id == Id);
+    }
     public IQueryable<User> GetUserByEmailAsync(string email)
     {
         return _userManager.Users.Where(x => x.Email!.ToLower().Equals(email.ToLower()));
