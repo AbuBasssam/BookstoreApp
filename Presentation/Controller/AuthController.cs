@@ -98,9 +98,12 @@ public class AuthController : ApiController
         );
 
     }
+
+
     [HttpPost(Router.AuthenticationRouter.VerifyResetPasswordCode)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [Authorize(Policy = Policies.ResetPasswordOnly)]
     public async Task<IActionResult> VerifyResetPassword([FromBody] VerifyResetPasswordOtpDto confirmationDto)
@@ -114,7 +117,11 @@ public class AuthController : ApiController
         );
 
     }
+
+
     [HttpPost(Router.AuthenticationRouter.ResetPassword)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [Authorize(Policy = Policies.ResetPasswordOnly)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)

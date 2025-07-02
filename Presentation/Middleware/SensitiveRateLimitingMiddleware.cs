@@ -19,7 +19,7 @@ public class SensitiveRateLimitingMiddleware
        
         { Normalize( Router.AuthenticationRouter.ResetPasswordCode), (5, TimeSpan.FromMinutes(3)) },// Send reset password code
         { Normalize( Router.AuthenticationRouter.VerifyResetPasswordCode), (3, TimeSpan.FromMinutes(5)) },// Verify reset password code
-        { Normalize( Router.AuthenticationRouter.ResetPasswordCode), (5, TimeSpan.FromMinutes(5)) },//Reset password request
+        { Normalize( Router.AuthenticationRouter.ResetPassword), (5, TimeSpan.FromMinutes(5)) },//Reset password request
 
     };
 

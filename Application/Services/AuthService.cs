@@ -409,6 +409,11 @@ public class AuthService : IAuthService
 
 
     }
+
+    #endregion
+
+    #region Reset Password Methods
+
     private async Task<bool> RemoveUserPassword(User user)
     {
         // Removes the user's old password.

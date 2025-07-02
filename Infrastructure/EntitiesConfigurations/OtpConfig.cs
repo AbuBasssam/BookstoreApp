@@ -10,7 +10,7 @@ namespace EntitiesConfigurations
         {
             builder.ToTable("Otps");
 
-            builder.ToTable(t => t.HasCheckConstraint("CK_Otp_Type", "Type > 0 AND Type < 2"));
+            builder.ToTable(t => t.HasCheckConstraint("CK_Otp_Type", "Type > 0 AND Type < 3"));
 
             builder.HasKey(o => o.Id);
 
