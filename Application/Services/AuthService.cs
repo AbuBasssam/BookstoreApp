@@ -362,6 +362,66 @@ public class AuthService : IAuthService
 
     }
 
+    public async Task<bool> ResetPasassword(string sessionToken, string newPassword)
+    {
+        try
+        {
+
+            // Step 1: Validate the session token.
+            var tokenValidationResult = await _ValidateSessionToken(sessionToken);
+
+            if (!tokenValidationResult.IsSuccess) return false;
+
+            // Step 2: Extract email from the token
+            var getEmailResult = _GetEmailFromSessionToken(sessionToken);
+
+            if (!getEmailResult.IsSuccess) return false;
+
+            string email = getEmailResult.data!;
+            // Step 3: Retrieve the user
+
+            var validateResult = await _ValidateUserExists(email);
+
+            if (!validateResult.IsSuccess) return false;
+
+            User user = validateResult.data!;
+
+            // Step 5: Remove the user's old password.
+            if (!await RemoveUserPassword(user)) return false;
+
+            // Step 6: Set the new password.
+            if (!await AddUserPassword(user, newPassword)) return false;
+
+            // Step 7: Deactivate the session token.
+            await _DeactiveVerificationToken(user.Id);
+
+
+            // Step 8: Commit the changes.
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error resetting password for token: {SessionToken}", sessionToken);
+            return false;
+        }
+
+
+    }
+    private async Task<bool> RemoveUserPassword(User user)
+    {
+        // Removes the user's old password.
+        var result = await _userManager.RemovePasswordAsync(user);
+        return result.Succeeded;
+    }
+    private async Task<bool> AddUserPassword(User user, string newPassword)
+    {
+        // Sets the user's new password.
+        var result = await _userManager.AddPasswordAsync(user, newPassword);
+        return result.Succeeded;
+    }
+
     #endregion
 
     #region AccessToken Methods

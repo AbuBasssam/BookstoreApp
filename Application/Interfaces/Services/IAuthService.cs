@@ -11,6 +11,8 @@ public interface IAuthService
     Task<Result<string>> ConfirmEmail(string verificationToken, string Code);
     Task<Result<string>> SendResetPasswordCode(string email);
     Task<Result<string>> ConfirmResetPasswordCode(string sessionToken, string Code);
+    Task<bool> ResetPasassword(string sessionToken, string newPassword);
+
 
 
 }
