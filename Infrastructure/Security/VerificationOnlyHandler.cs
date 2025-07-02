@@ -8,7 +8,7 @@ public class VerificationOnlyHandler : AuthorizationHandler<VerificationOnlyRequ
         AuthorizationHandlerContext context,
         VerificationOnlyRequirement requirement)
     {
-        var isVerificationToken = context.User.FindFirst(VerificationClaims.IsVerificationToken)?.Value;
+        var isVerificationToken = context.User.FindFirst(SessionTokenClaims.IsVerificationToken)?.Value;
 
         if (isVerificationToken == "true")
         {

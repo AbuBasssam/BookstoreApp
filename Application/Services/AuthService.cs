@@ -31,7 +31,7 @@ public class AuthService : IAuthService
     private readonly IStringLocalizer<SharedResources> _Localizer;
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
-    private readonly VerificationTokenService _verificationTokenService;
+    private readonly SessionTokenService _verificationTokenService;
     private static string _SecurityAlgorithm = SecurityAlgorithms.HmacSha256Signature;
     private static JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
 
@@ -52,7 +52,7 @@ public class AuthService : IAuthService
         _userManager = userManager;
         _roleManager = roleManager;
         _signaturekey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtSettings.Secret!));
-        _verificationTokenService = new VerificationTokenService(jwtSettings);
+        _verificationTokenService = new SessionTokenService(jwtSettings);
     }
     #endregion
 

@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.Interfaces;
+using Domain.Entities;
 using Domain.HelperClasses;
 using Domain.Security;
 using Microsoft.IdentityModel.Tokens;
@@ -8,10 +9,10 @@ using System.Text;
 
 namespace Application.Services;
 
-public class VerificationTokenService
+public class SessionTokenService : ISessionTokenService
 {
     private readonly JwtSettings _jwtSetting;
-    public VerificationTokenService(JwtSettings jwtSetting)
+    public SessionTokenService(JwtSettings jwtSetting)
     {
         _jwtSetting = jwtSetting;
     }
@@ -33,12 +34,16 @@ public class VerificationTokenService
         return (obj, accessToken);
     }
 
+    public (JwtSecurityToken, string) GenerateResetToken(User user, int expiresInMinutes)
+    {
+        throw new NotImplementedException();
+    }
 
     private List<Claim> GetVerificationClaims(User user)
     {
         return new List<Claim>
         {
-            new Claim(VerificationClaims.IsVerificationToken, "true"),
+            new Claim(SessionTokenClaims.IsVerificationToken, "true"),
             new Claim(nameof(UserClaimModel.Id), user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email !),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
