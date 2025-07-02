@@ -14,10 +14,12 @@ public class SensitiveRateLimitingMiddleware
     // Use route constants from Router class and normalize keys
     private readonly Dictionary<string, (int Limit, TimeSpan Window)> _endpointRateLimits = new()
     {
-        { Normalize( Router.AuthenticationRouter.ConfirmEmailCode), (5, TimeSpan.FromMinutes(3)) },
-        { Normalize( Router.AuthenticationRouter.VerifyResetPasswordCode), (3, TimeSpan.FromMinutes(5)) },
-        { Normalize( Router.AuthenticationRouter.ResetPasswordCode), (5, TimeSpan.FromMinutes(5)) },
-        { Normalize( Router.AuthenticationRouter.VerifyEmailCode), (3, TimeSpan.FromMinutes(5)) },
+        { Normalize( Router.AuthenticationRouter.ConfirmEmailCode), (5, TimeSpan.FromMinutes(3)) },//Send email confirmation code
+        { Normalize( Router.AuthenticationRouter.VerifyEmailCode), (3, TimeSpan.FromMinutes(5)) },// Verify email code
+       
+        { Normalize( Router.AuthenticationRouter.ResetPasswordCode), (5, TimeSpan.FromMinutes(3)) },// Send reset password code
+        { Normalize( Router.AuthenticationRouter.VerifyResetPasswordCode), (3, TimeSpan.FromMinutes(5)) },// Verify reset password code
+        { Normalize( Router.AuthenticationRouter.ResetPasswordCode), (5, TimeSpan.FromMinutes(5)) },//Reset password request
 
     };
 

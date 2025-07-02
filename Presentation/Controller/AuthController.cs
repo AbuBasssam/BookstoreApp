@@ -114,6 +114,19 @@ public class AuthController : ApiController
         );
 
     }
+    [HttpPost(Router.AuthenticationRouter.ResetPassword)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [Authorize(Policy = Policies.ResetPasswordOnly)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
+    {
+        var sessionToken = HttpContext.GetAuthToken();
 
+        return await CommandExecutor.Execute(
+                new ResetPasswordCommand(sessionToken, resetPasswordDto.NewPassword),
+                Sender,
+                (Response<bool> response) => NewResult(response)
+        );
+
+    }
 
 }
