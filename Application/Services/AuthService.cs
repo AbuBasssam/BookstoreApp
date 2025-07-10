@@ -161,7 +161,7 @@ public class AuthService : IAuthService
             User user = validateResult.data!;
 
             // Step 4: Handle OTP expiration and cooldown
-            var otpValidationResult = await ValidateOtpLifecycleAsync(email, user.Id, 2, enOtpType.ConfirmEmail);
+            var otpValidationResult = await _ValidateOtpLifecycleAsync(email, user.Id, 2, enOtpType.ConfirmEmail);
 
             if (!otpValidationResult.IsSuccess) return otpValidationResult;
 
