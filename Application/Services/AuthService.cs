@@ -150,9 +150,9 @@ public class AuthService : IAuthService
             if (!getEmailResult.IsSuccess) return getEmailResult;
 
             string email = getEmailResult.data!;
-            // End new Area
 
-            // Step 1: Retrieve the user by email
+
+            // Step 3: Retrieve the user by email
             var validateResult = await _ValidateUserExists(email);
 
             // For security, return a generic success message if user not found.
@@ -160,24 +160,24 @@ public class AuthService : IAuthService
 
             User user = validateResult.data!;
 
-            // Step 2: Handle OTP expiration and cooldown
+            // Step 4: Handle OTP expiration and cooldown
             var otpValidationResult = await ValidateOtpLifecycleAsync(email, user.Id, 2, enOtpType.ConfirmEmail);
 
             if (!otpValidationResult.IsSuccess) return otpValidationResult;
 
-            // Step 3: Generate OTP and message
+            // Step 5: Generate OTP and message
             string otpCode = _GenerateOTPCode();
 
             string message = $"Your email confirmation code is: {otpCode}";
 
-            // Step 4: Send email
+            // Step 6: Send email
             await SendOtpEmail(user.Email!, otpCode, "Confirm Your Email");
 
-            //Step 5: _SaveOtp in database
+            //Step 7: _SaveOtp in database
             int minutesValidDuration = 5;
             await _SaveOtpToDb(user.Id, otpCode, enOtpType.ConfirmEmail, minutesValidDuration);
 
-            // Step 6: Commit changes to the database
+            // Step 8: Commit changes to the database
             await _unitOfWork.SaveChangesAsync();
 
 
