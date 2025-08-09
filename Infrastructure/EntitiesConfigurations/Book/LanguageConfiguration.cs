@@ -10,7 +10,6 @@ internal class LanguageConfiguration : IEntityTypeConfiguration<Language>
         builder.ToTable("Languages");
 
         builder.HasKey(l => l.Id);
-        builder.HasAlternateKey(l => l.Id).;
 
         builder.Property(l => l.Id)
             .HasColumnName("LanguageID")
