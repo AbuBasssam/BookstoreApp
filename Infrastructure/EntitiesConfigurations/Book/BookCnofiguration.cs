@@ -21,7 +21,7 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
 
         builder.Property(b => b.ISBN).HasColumnType("nvarchar").IsRequired().HasMaxLength(20);
 
-        builder.Property(b => b.ImageUrl).HasColumnType("nvarchar")
+        builder.Property(b => b.CoverImage).HasColumnType("nvarchar")
             .IsRequired()
             .HasMaxLength(250);
 

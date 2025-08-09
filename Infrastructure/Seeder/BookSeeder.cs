@@ -28,7 +28,7 @@ public class BookSeeder
                         ISBN = GenerateISBN(Enum.Parse<enCategory>(category.NameEN), i),
                         CategoryID = category.Id,
                         AuthorID = authors[(i - 1) % authors.Length].Id,
-                        ImageUrl = $"/images/books/{category.NameEN.ToLower()}_{i}.jpg",
+                        CoverImage = $"/images/books/{category.NameEN.ToLower()}_{i}.jpg",
                         Copies = new List<BookCopy>()
                     };
 
