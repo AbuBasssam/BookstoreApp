@@ -28,4 +28,6 @@ public class Book : IEntity<int>
     public virtual Author Author { get; set; }
     public virtual ICollection<BookCopy> Copies { get; set; }
     public virtual ICollection<ReservationRecord> Reservations { get; set; }
+    public virtual ICollection<BookRating> Ratings { get; set; }
+    public virtual ICollection<BookAuditLog> AuditLogs { get; set; }
 }

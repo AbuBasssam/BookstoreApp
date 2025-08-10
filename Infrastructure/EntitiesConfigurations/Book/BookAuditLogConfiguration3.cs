@@ -48,7 +48,7 @@ public class BookAuditLogConfiguration : IEntityTypeConfiguration<BookAuditLog>
             .IsRequired();
 
         builder.Property(x => x.ByUserID)
-            .IsRequired();
+            .IsRequired(false);
 
         // Foreign key relationships
         builder.HasOne(x => x.Book)
