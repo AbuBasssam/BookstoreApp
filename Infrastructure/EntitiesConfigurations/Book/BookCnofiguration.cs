@@ -42,7 +42,7 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
             .HasColumnType("smallint");
 
         builder.Property(b => b.AvailabilityDate)
-            .HasColumnType("datetime2");
+            .HasColumnType("date");
 
         builder.Property(b => b.Position)
             .HasColumnType("nvarchar(20)")
@@ -50,7 +50,7 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
             .HasComment("Format: [A-Z][2 digits] or [A-Z][2 digits]-[alphanumeric]");
 
         builder.Property(b => b.LastReservationOpenDate)
-            .HasColumnType("datetime2");
+            .HasColumnType("datetime2(7)");
 
         // relationships Configuration
         builder.HasOne(b => b.Category)
