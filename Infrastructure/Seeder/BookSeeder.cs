@@ -9,44 +9,44 @@ public class BookSeeder
 {
     public static async Task SeedAsync(AppDbContext context)
     {
-        if (!context.Books.Any())
-        {
-            var categories = await SeedCategories(context);
+        //if (!context.Books.Any())
+        //{
+        //    var categories = await SeedCategories(context);
 
-            var authors = await SeedAuthors(context);
-            var books = new List<Book>();
+        //    var authors = await SeedAuthors(context);
+        //    var books = new List<Book>();
 
-            foreach (var category in categories)
-            {
-                for (int i = 1; i <= 5; i++)
-                {
-                    var book = new Book
-                    {
-                        TitleEN = $"{category.NameEN} Book {i}",
-                        TitleAR = $"كتاب {category.NameAR} {i}",
-                        PublishDate = DateTime.Now.AddYears(-i),
-                        ISBN = GenerateISBN(Enum.Parse<enCategory>(category.NameEN), i),
-                        CategoryID = category.Id,
-                        AuthorID = authors[(i - 1) % authors.Length].Id,
-                        CoverImage = $"/images/books/{category.NameEN.ToLower()}_{i}.jpg",
-                        Copies = new List<BookCopy>()
-                    };
+        //    foreach (var category in categories)
+        //    {
+        //        for (int i = 1; i <= 5; i++)
+        //        {
+        //            var book = new Book
+        //            {
+        //                TitleEN = $"{category.NameEN} Book {i}",
+        //                TitleAR = $"كتاب {category.NameAR} {i}",
+        //                PublishDate = DateTime.Now.AddYears(-i),
+        //                ISBN = GenerateISBN(Enum.Parse<enCategory>(category.NameEN), i),
+        //                CategoryID = category.Id,
+        //                AuthorID = authors[(i - 1) % authors.Length].Id,
+        //                CoverImage = $"/images/books/{category.NameEN.ToLower()}_{i}.jpg",
+        //                Copies = new List<BookCopy>()
+        //            };
 
-                    //Add 5 copies for each book
-                    for (int j = 1; j <= 5; j++)
-                    {
-                        book.Copies.Add(new BookCopy());
-                    }
-                    books.Add(book);
+        //            //Add 5 copies for each book
+        //            for (int j = 1; j <= 5; j++)
+        //            {
+        //                book.Copies.Add(new BookCopy());
+        //            }
+        //            books.Add(book);
 
 
-                }
-            }
-            await context.Books.AddRangeAsync(books);
-            await context.SaveChangesAsync();
+        //        }
+        //    }
+        //    await context.Books.AddRangeAsync(books);
+        //    await context.SaveChangesAsync();
 
-            //await context.SaveChangesAsync();
-        }
+        //    //await context.SaveChangesAsync();
+        //}
     }
 
     private static async Task<Author[]> SeedAuthors(AppDbContext context)
