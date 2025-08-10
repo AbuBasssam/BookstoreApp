@@ -21,6 +21,5 @@ public enum NotificationType
 {
     DueDateReminder = 1,
     Overdue = 2,
-    NewBook = 3,
-    ReservationAvailable = 4
+    ReservationAvailable = 3
 }
