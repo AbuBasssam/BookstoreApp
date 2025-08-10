@@ -1,5 +1,4 @@
 ﻿using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,16 +13,12 @@ internal class BorrowingConfiguration : IEntityTypeConfiguration<BorrowingRecord
 
         builder.Property(br => br.Id).HasColumnName("BorrowingRecordID");
 
-        builder.Property(br => br.InitialBorrowingDate)
+        builder.Property(br => br.BorrowingDate)
                .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(br => br.RenewalCount)
             .HasColumnType("tinyint")
             .HasDefaultValue(0);
-
-        builder.Property(br => br.Status)
-               .HasDefaultValue(enBorrowingStatus.Pending)
-               .HasConversion<byte>();
 
         builder.HasOne(br => br.BookCopy)
                .WithMany(b => b.BorrowingRecords)
