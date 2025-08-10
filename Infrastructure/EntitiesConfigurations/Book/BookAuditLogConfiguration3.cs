@@ -19,11 +19,11 @@ public class BookAuditLogConfiguration : IEntityTypeConfiguration<BookAuditLog>
             .HasColumnName("ID")
             .ValueGeneratedOnAdd();
 
-        builder.Property(x => x.BookId)
+        builder.Property(x => x.BookID)
             .HasColumnName("BookID")
             .IsRequired();
 
-        builder.Property(x => x.CopyId)
+        builder.Property(x => x.CopyID)
             .HasColumnName("CopyID")
             .IsRequired(false);
 
@@ -47,23 +47,23 @@ public class BookAuditLogConfiguration : IEntityTypeConfiguration<BookAuditLog>
             .HasColumnType("datetime")
             .IsRequired();
 
-        builder.Property(x => x.ByUserId)
+        builder.Property(x => x.ByUserID)
             .IsRequired();
 
         // Foreign key relationships
         builder.HasOne(x => x.Book)
             .WithMany()
-            .HasForeignKey(x => x.BookId)
+            .HasForeignKey(x => x.BookID)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.User)
             .WithMany()
-            .HasForeignKey(x => x.ByUserId)
+            .HasForeignKey(x => x.ByUserID)
             .OnDelete(DeleteBehavior.Restrict);
 
 
 
-        builder.HasIndex(x => x.ByUserId)
+        builder.HasIndex(x => x.ByUserID)
             .HasDatabaseName("IX_BookAuditLog_ByUserID");
 
 
