@@ -13,6 +13,6 @@ public class Notification : IEntity<int>
     public DateTime SentDate { get; set; }
     public bool IsRead { get; set; }
     // Navigation Properties
-    public UserDevice UserDevice { get; set; }
+    public virtual UserDevice UserDevice { get; set; }
 
 }
