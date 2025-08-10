@@ -9,6 +9,12 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
     {
         builder.ToTable("Books");
 
+        builder.ToTable(b => b.HasCheckConstraint(
+            name: "CK_Books_Position_Format",
+            sql: "Position LIKE '[A-Z][0-9][0-9]%' OR Position LIKE '[A-Z][0-9][0-9]-[0-9A-Za-z]%'"
+        ));
+
+
         builder.HasKey(b => b.Id);
 
         builder.Property(b => b.Id).HasColumnName("BookID").ValueGeneratedOnAdd();
@@ -21,9 +27,30 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
 
         builder.Property(b => b.ISBN).HasColumnType("nvarchar").IsRequired().HasMaxLength(20);
 
-        builder.Property(b => b.CoverImage).HasColumnType("nvarchar")
+        builder.Property(b => b.CoverImage)
+            .HasColumnType("nvarchar")
             .IsRequired()
             .HasMaxLength(250);
+
+        builder.Property(b => b.DescriptionEN)
+            .HasColumnType("nvarchar(300)");
+
+        builder.Property(b => b.DescriptionAR)
+            .HasColumnType("nvarchar(300)");
+
+        builder.Property(b => b.PageCount)
+            .HasColumnType("smallint");
+
+        builder.Property(b => b.AvailabilityDate)
+            .HasColumnType("datetime2");
+
+        builder.Property(b => b.Position)
+            .HasColumnType("nvarchar(20)")
+            .HasMaxLength(20)
+            .HasComment("Format: [A-Z][2 digits] or [A-Z][2 digits]-[alphanumeric]");
+
+        builder.Property(b => b.LastReservationOpenDate)
+            .HasColumnType("datetime2");
 
         // relationships Configuration
         builder.HasOne(b => b.Category)
@@ -33,6 +60,16 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
         builder.HasOne(b => b.Author)
                .WithMany(a => a.Books)
                .HasForeignKey(b => b.AuthorID);
+
+        builder.HasOne(b => b.Publisher)
+              .WithMany()
+              .HasForeignKey(b => b.PublisherID)
+              .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(b => b.Language)
+               .WithMany()
+               .HasForeignKey(b => b.LanguageID)
+               .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
