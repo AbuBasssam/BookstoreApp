@@ -10,6 +10,7 @@ public class AppDbContext : IdentityDbContext<User, Role, int,
 {
     public DbSet<Author> Author { get; set; }
     public DbSet<Book> Books { get; set; }
+    public DbSet<Language> Languages { get; set; }
     public DbSet<BookCopy> BookCopies { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<BookView> BookView { get; set; }
