@@ -12,4 +12,7 @@ public class Notification : IEntity<int>
     public NotificationType NotificationType { get; set; }
     public DateTime SentDate { get; set; }
     public bool IsRead { get; set; }
+    // Navigation Properties
+    public UserDevice UserDevice { get; set; }
+
 }

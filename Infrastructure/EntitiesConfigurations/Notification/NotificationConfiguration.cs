@@ -17,11 +17,17 @@ internal class NotificationConfiguration : IEntityTypeConfiguration<Notification
             .ValueGeneratedOnAdd();
 
         // Properties Configuration
-        builder.Property(n => n.Title)
+        builder.Property(n => n.TitleEN)
+            .HasMaxLength(100)
+            .IsRequired();
+        builder.Property(n => n.TitleAR)
             .HasMaxLength(100)
             .IsRequired();
 
-        builder.Property(n => n.Message)
+        builder.Property(n => n.MessageEN)
+            .HasMaxLength(500)
+            .IsRequired();
+        builder.Property(n => n.MessageAR)
             .HasMaxLength(500)
             .IsRequired();
 
@@ -35,18 +41,12 @@ internal class NotificationConfiguration : IEntityTypeConfiguration<Notification
             .HasConversion<byte>()
             .IsRequired();
 
-        builder.Property(n => n.EntityType)
-            .HasConversion<byte>();
 
         // Relationships
-        builder.HasOne(n => n.User)
-            .WithMany(u => u.Notifications)
-            .HasForeignKey(n => n.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(n => n.UserDevice)
             .WithMany()
-            .HasForeignKey(n => n.UserDeviceId)
+            .HasForeignKey(n => n.UserDeviceID)
             .OnDelete(DeleteBehavior.Restrict);
 
 
