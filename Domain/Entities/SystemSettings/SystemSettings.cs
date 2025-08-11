@@ -1,7 +1,6 @@
 ﻿namespace Domain.Entities;
-public class SystemSettings : IEntity<int>
+public class SystemSettings
 {
-    public int Id { get; set; }
     public int MaxLoanDays { get; set; } = 30;
     public int MaxRenewals { get; set; } = 2;
     public int RenewalExtensionDays { get; set; } = 7;
@@ -10,5 +9,4 @@ public class SystemSettings : IEntity<int>
     public byte ReservationExpiryDays { get; set; } = 1;
     public byte PickupExpiryHours { get; set; } = 48;
 
-    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 }

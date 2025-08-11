@@ -9,14 +9,9 @@ internal class SystemSettingsConfiguration : IEntityTypeConfiguration<SystemSett
     {
         builder.ToTable("SystemSettings");
 
-        builder.HasKey(s => s.Id);
-
-        builder.Property(s => s.Id)
-              .HasColumnName("SettingID")
-              .ValueGeneratedOnAdd();
+        builder.HasNoKey();
 
         builder.Property(s => s.FinePerDay).HasColumnType("decimal(5,2)");
 
-        builder.Property(s => s.LastUpdated).HasDefaultValueSql("GETUTCDATE()");
     }
 }
