@@ -9,20 +9,27 @@ internal class ReservationConfiguration : IEntityTypeConfiguration<ReservationRe
     public void Configure(EntityTypeBuilder<ReservationRecord> builder)
     {
         builder.ToTable("ReservationRecords");
-        
+
         builder.HasKey(r => r.Id);
-        
+
         builder.Property(r => r.Id)
             .HasColumnName("ReservationRecordID");
 
         builder.Property(r => r.ReservationDate)
               .HasDefaultValueSql("GETUTCDATE()");
 
+        builder.Property(r => r.Type)
+               .HasConversion<byte>()
+               .IsRequired();
 
-        builder.Property(r => r.IsCancelled)
-               .HasDefaultValue(false);
+        builder.Property(r => r.Status)
+               .HasConversion<byte>()
+               .IsRequired();
 
-       
+        builder.Property(r => r.ExpirationDate)
+            .IsRequired(false);
+
+        // Relationships configuration
         builder.HasOne(r => r.Book)
                .WithMany(b => b.Reservations)
                .HasForeignKey(r => r.BookID)
