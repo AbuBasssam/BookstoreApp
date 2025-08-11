@@ -15,19 +15,8 @@ internal class SystemSettingsConfiguration : IEntityTypeConfiguration<SystemSett
               .HasColumnName("SettingID")
               .ValueGeneratedOnAdd();
 
-        builder.Property(s => s.MaxLoanDays)
-               .HasDefaultValue(14);
+        builder.Property(s => s.FinePerDay).HasColumnType("decimal(5,2)");
 
-        builder.Property(s => s.MaxRenewals)
-               .HasDefaultValue(1);
-
-        builder.Property(s => s.RenewalExtensionDays)
-               .HasDefaultValue(7);
-
-        builder.Property(s => s.FinePerDay)
-               .HasColumnType("decimal(5,2)");
-
-        builder.Property(s => s.LastUpdated)
-               .HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(s => s.LastUpdated).HasDefaultValueSql("GETUTCDATE()");
     }
 }
