@@ -54,7 +54,7 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
             .HasMaxLength(20)
             .HasComment("Format: [A-Z][2 digits] or [A-Z][2 digits]-[alphanumeric]");
 
-        builder.Property(b => b.LastReservationOpenDate)
+        builder.Property(b => b.LastWaitListOpenDate)
             .HasColumnType("datetime2(7)")
             .IsRequired(false);
 

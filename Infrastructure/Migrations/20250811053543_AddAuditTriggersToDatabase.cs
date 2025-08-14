@@ -28,11 +28,11 @@ AS
 BEGIN
     SET NOCOUNT ON;
 	DECLARE @UserId INT =ISNULL(CAST(SESSION_CONTEXT(N'UserId') AS INT), NULL);
-	 IF EXISTS (
+	  IF EXISTS (
         SELECT 1
         FROM inserted i
         JOIN deleted d ON i.BookID = d.BookID
-        WHERE i.LastReservationOpenDate <> d.LastReservationOpenDate)
+        WHERE i.LastWaitListOpenDate <> d.LastWaitListOpenDate)
 		 BEGIN
         -- سجل التغيير الخاص بفتح/إغلاق الانتظار فقط
         INSERT INTO BookAuditLogs
@@ -47,11 +47,11 @@ BEGIN
         )
         SELECT
             i.BookID,
-            'LastReservationOpenDate',
-            CONVERT(NVARCHAR(30), d.LastReservationOpenDate, 126),
-            CONVERT(NVARCHAR(30), i.LastReservationOpenDate, 126),
+            'LastWaitListOpenDate',
+            CONVERT(NVARCHAR(30), d.LastWaitListOpenDate, 126),
+            CONVERT(NVARCHAR(30), i.LastWaitListOpenDate, 126),
             CASE
-                WHEN (d.LastReservationOpenDate IS NULL AND i.LastReservationOpenDate IS NOT NULL OR d.LastReservationOpenDate IS NOT NULL AND i.LastReservationOpenDate > d.LastReservationOpenDate)
+                WHEN (d.LastWaitListOpenDate IS NULL AND i.LastWaitListOpenDate IS NOT NULL OR d.LastWaitListOpenDate IS NOT NULL AND i.LastWaitListOpenDate > d.LastWaitListOpenDate)
                    
                     THEN 1 -- OpenWaitList(first time)/OpenWaitList (تحديث لاحق)
                 ELSE 2 -- CloseWaitList
