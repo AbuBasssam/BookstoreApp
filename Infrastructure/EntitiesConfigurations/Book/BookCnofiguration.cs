@@ -14,6 +14,11 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
             sql: "Position LIKE '[A-Z][0-9][0-9]%' OR Position LIKE '[A-Z][0-9][0-9]-[0-9A-Za-z]%'"
         ));
 
+        builder.ToTable("Books", b =>
+        {
+            b.HasTrigger("TR_Book_Update_Audit");
+        });
+
 
         builder.HasKey(b => b.Id);
 
@@ -50,7 +55,8 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
             .HasComment("Format: [A-Z][2 digits] or [A-Z][2 digits]-[alphanumeric]");
 
         builder.Property(b => b.LastReservationOpenDate)
-            .HasColumnType("datetime2(7)");
+            .HasColumnType("datetime2(7)")
+            .IsRequired(false);
 
         // relationships Configuration
         builder.HasOne(b => b.Category)
