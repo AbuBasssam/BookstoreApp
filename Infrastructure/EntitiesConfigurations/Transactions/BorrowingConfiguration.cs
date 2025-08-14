@@ -8,6 +8,11 @@ internal class BorrowingConfiguration : IEntityTypeConfiguration<BorrowingRecord
     public void Configure(EntityTypeBuilder<BorrowingRecord> builder)
     {
         builder.ToTable("BorrowingRecords");
+        builder.ToTable(x =>
+        {
+            x.HasTrigger("TR_BorrowingRecord_Update_Audit");
+            x.HasTrigger("TR_BorrowingRecord_Insert_Audit");
+        });
 
         builder.HasKey(br => br.Id);
 
