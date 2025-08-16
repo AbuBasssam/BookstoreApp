@@ -12,6 +12,6 @@ public class ReservationAudit : IEntity<int>
     public DateTime Timestamp { get; set; }
 
     public virtual ReservationRecord Reservation { get; set; }
-    public virtual BorrowingRecord Borrowing { get; set; }
+    public virtual BorrowingRecord? Borrowing { get; set; }
     public virtual User? User { get; set; }
 }
