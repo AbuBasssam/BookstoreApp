@@ -42,57 +42,54 @@ BEGIN
 END;");
 
             // Create the trigger for update Borrowing Record
-            migrationBuilder.Sql(@"
-CREATE TRIGGER TR_ReservationRecord_Update_Audit
-ON ReservationRecords
-AFTER UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    -- ===== خروج مبكر إذا لم تتغير الحالة =====
-    IF NOT EXISTS (
-        SELECT 1
-        FROM inserted i
-        INNER JOIN deleted d ON i.ReservationRecordID = d.ReservationRecordID
-        WHERE i.Status <> d.Status
-    )
-    BEGIN
-        RETURN;
-    END;
-
+            migrationBuilder.Sql(@"CREATE TRIGGER TR_BorrowingRecord_Update_Audit
+            ON BorrowingRecords
+			AFTER UPDATE
+			As
+Begin
+SET NOCOUNT ON;
     DECLARE @UserId INT = ISNULL(CAST(SESSION_CONTEXT(N'UserId') AS INT), NULL);
-
-    -- ===== تسجيل جميع التغييرات (عدا Fulfilled) =====
-    INSERT INTO ReservationAudits
+	INSERT INTO BorrowingAudits 
     (
-        ReservationID,
-        Action,
         BorrowingID,
+        Action,
         UserID,
-        Timestamp
+        Timestamp,
+        OldDueDate,
+        NewDueDate
     )
     SELECT
-        i.ReservationRecordID,
-        CASE i.Status
-            WHEN 2 THEN 2 -- ConvertedToNotified
-            WHEN 4 THEN 4 -- Expired
-            WHEN 5 THEN 5 -- Canceled
-        END AS Action,
-        NULL, 
-        @UserId,
-        GETDATE()
+        i.BorrowingRecordID,                    -- BorrowingID
+        2,                       -- BorrowExtended = 2
+        @UserId,                 -- UserID من SESSION_CONTEXT
+        GETDATE(),               -- Timestamp
+        d.DueDate,               -- OldDueDate
+        i.DueDate                -- NewDueDate
     FROM inserted i
-    INNER JOIN deleted d ON i.ReservationRecordID = d.ReservationRecordID
-    WHERE i.Status <> d.Status
-      AND i.Status <> 1     -- ignore Pending status
-      AND i.Status <> 3     -- ignore Fulfilled status
-      AND (
-          (i.Status = 2 AND d.Status = 1) OR -- Pending → Notified
-          (i.Status = 4 AND d.Status = 2) OR -- Notified → Expired
-          (i.Status = 5 AND d.Status = 1)    -- Pending → Cancelled
-      );
-END;");
+    INNER JOIN deleted d ON i.BorrowingRecordID = d.BorrowingRecordID
+    WHERE i.DueDate <> d.DueDate 
+	INSERT INTO BorrowingAudits 
+    (
+        BorrowingID,
+        Action,
+        UserID,
+        Timestamp,
+        OldDueDate,
+        NewDueDate
+    )
+    SELECT
+        i.BorrowingRecordID,                    -- BorrowingID
+        3,                                      -- BorrowReturned = 3
+        @UserId,                                -- UserID من SESSION_CONTEXT
+        GETDATE(),                              -- Timestamp
+        NULL,                                   -- OldDueDate
+        NULL                                    -- NewDueDate (NULL للإرجاع)
+    FROM inserted i
+    INNER JOIN deleted d ON i.BorrowingRecordID = d.BorrowingRecordID
+    WHERE 
+        (i.ReturnDate IS NOT NULL AND d.ReturnDate IS NULL) -- تم إضافة تاريخ الإرجاع
+    
+End;");
 
 
 
