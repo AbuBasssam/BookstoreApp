@@ -6,5 +6,8 @@ public enum BookActionType
     CloseReservation = 2,
     AddCopy = 3,
     DeleteCopy = 4,
-    UpdateBookInfo = 5
+    UpdateBookInfo = 5,
+    AddBook = 6,
+    DeactivateBook = 7
+
 }
