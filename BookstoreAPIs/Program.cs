@@ -81,7 +81,7 @@ using (var scope = app.Services.CreateScope())
     await SystemSettingsSeeder.SeedAsync(DbContext);
     await BookSeeder.SeedAsync(DbContext);
     await LanguageSeeder.SeedAsync(DbContext);
-    //await SPAndFunctionsSeeder.SeedAsync(DbContext);
+    await SPAndFunctionsSeeder.SeedAsync(DbContext);
 
 
 }
