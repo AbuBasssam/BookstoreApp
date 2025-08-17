@@ -63,6 +63,8 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
                .WithMany(c => c.Books)
                .HasForeignKey(b => b.CategoryID);
 
+        builder.Property(b => b.IsActive).IsRequired();
+
         builder.HasOne(b => b.Author)
                .WithMany(a => a.Books)
                .HasForeignKey(b => b.AuthorID);

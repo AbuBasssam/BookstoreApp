@@ -18,6 +18,7 @@ public class Book : IEntity<int>
     public required DateOnly AvailabilityDate { get; set; }
     public required string Position { get; set; }
     public DateTime? LastWaitListOpenDate { get; set; }
+    public bool IsActive { get; set; }
     public required string CoverImage { get; set; }
     public int NumberOfCopies => Copies?.Count ?? 0;
 
