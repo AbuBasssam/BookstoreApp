@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250817083436_FixBookInsertTrigger")]
+    partial class FixBookInsertTrigger
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,7 +150,7 @@ namespace Infrastructure.Migrations
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
-            modelBuilder.Entity("Domain.Entities.BookActivityLog", b =>
+            modelBuilder.Entity("Domain.Entities.BookAuditLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -199,7 +202,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CopyID");
 
-                    b.ToTable("BookActivityLogs", (string)null);
+                    b.ToTable("BookAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.BookCopy", b =>
@@ -1088,7 +1091,7 @@ namespace Infrastructure.Migrations
                     b.Navigation("Publisher");
                 });
 
-            modelBuilder.Entity("Domain.Entities.BookActivityLog", b =>
+            modelBuilder.Entity("Domain.Entities.BookAuditLog", b =>
                 {
                     b.HasOne("Domain.Entities.Book", "Book")
                         .WithMany()

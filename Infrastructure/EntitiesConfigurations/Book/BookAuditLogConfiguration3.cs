@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EntitiesConfigurations;
 
-public class BookAuditLogConfiguration : IEntityTypeConfiguration<BookAuditLog>
+public class BookAuditLogConfiguration : IEntityTypeConfiguration<BookActivityLog>
 {
-    public void Configure(EntityTypeBuilder<BookAuditLog> builder)
+    public void Configure(EntityTypeBuilder<BookActivityLog> builder)
     {
         // Table configuration
-        builder.ToTable("BookAuditLogs");
+        builder.ToTable("BookActivityLogs");
 
         // Primary key
         builder.HasKey(x => x.Id);

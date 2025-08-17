@@ -2,7 +2,7 @@
 
 namespace Domain.Entities;
 
-public class BookAuditLog : IEntity<int>
+public class BookActivityLog : IEntity<int>
 {
 
     public int Id { get; set; }
