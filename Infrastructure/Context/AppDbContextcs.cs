@@ -8,8 +8,10 @@ public class AppDbContext : IdentityDbContext<User, Role, int,
                             IdentityUserLogin<int>, IdentityRoleClaim<int>,
                             IdentityUserToken<int>>
 {
-    public DbSet<Author> Author { get; set; }
+    public DbSet<Author> Authors { get; set; }
+    public DbSet<Publisher> Publishers { get; set; }
     public DbSet<Book> Books { get; set; }
+    public DbSet<BookRating> BookRatings { get; set; }
     public DbSet<Language> Languages { get; set; }
     public DbSet<BookCopy> BookCopies { get; set; }
     public DbSet<Category> Categories { get; set; }

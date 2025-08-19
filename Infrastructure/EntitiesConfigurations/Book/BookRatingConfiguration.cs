@@ -30,7 +30,7 @@ public class BookRatingConfiguration : IEntityTypeConfiguration<BookRating>
 
         // Foreign key relationships
         builder.HasOne(x => x.Book)
-            .WithMany()
+            .WithMany(x => x.Ratings)
             .HasForeignKey(x => x.BookID)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -39,7 +39,6 @@ public class BookRatingConfiguration : IEntityTypeConfiguration<BookRating>
             .HasForeignKey(x => x.UserID)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(x => x.BookID)
-            .HasDatabaseName("IX_BookRating_BookID");
+
     }
 }
