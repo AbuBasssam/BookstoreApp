@@ -23,11 +23,11 @@ public static class UserSeeder
 
             var testUsers = new List<User>
             {
-                new User { UserName = "TestUser1", Email = "testuser1@gmail.com", EmailConfirmed = true, RoleID = 1 },
-                new User { UserName = "TestUser2", Email = "testuser2@gmail.com", EmailConfirmed = true, RoleID = 1 },
-                new User { UserName = "TestUser3", Email = "testuser3@gmail.com", EmailConfirmed = true, RoleID = 1 },
-                new User { UserName = "TestUser4", Email = "testuser4@gmail.com", EmailConfirmed = true, RoleID = 1 },
-                new User { UserName = "TestUser5", Email = "testuser5@gmail.com", EmailConfirmed = true, RoleID = 1 }
+                new User { UserName = "TestUser1", Email = "testuser1@gmail.com", EmailConfirmed = true, RoleID = 2 },
+                new User { UserName = "TestUser2", Email = "testuser2@gmail.com", EmailConfirmed = true, RoleID = 2 },
+                new User { UserName = "TestUser3", Email = "testuser3@gmail.com", EmailConfirmed = true, RoleID = 2 },
+                new User { UserName = "TestUser4", Email = "testuser4@gmail.com", EmailConfirmed = true, RoleID = 2 },
+                new User { UserName = "TestUser5", Email = "testuser5@gmail.com", EmailConfirmed = true, RoleID = 2 }
             };
 
             foreach (var user in testUsers)
