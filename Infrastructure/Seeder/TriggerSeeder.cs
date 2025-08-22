@@ -18,6 +18,7 @@ public static class TriggerSeeder
         await ExecuteSqlAsync(connection, _ReservationRecordInsertAuditTrigger());
         await ExecuteSqlAsync(connection, _ReservationRecordUpdateAuditTrigger());
         await ExecuteSqlAsync(connection, _SystemSettingsUpdateAuditTrigger());
+        await ExecuteSqlAsync(connection, _AddBookCopyInsertAuditTrigger());
     }
     private static async Task ExecuteSqlAsync(System.Data.Common.DbConnection connection, string sql)
     {
@@ -55,7 +56,7 @@ BEGIN
         NULL,                   
         NULL,                   
         NULL,                   
-        6,                      
+        5,                      
         GETDATE(),
         @UserId
     FROM inserted i;
@@ -176,7 +177,7 @@ CREATE OR ALTER TRIGGER TR_Book_Update_Audit
         FieldName,
         OldValue,
         NewValue,
-        5, -- UpdateBookInfo
+        4, -- UpdateBookInfo
         GETDATE(),
         @UserId
     FROM
@@ -438,6 +439,43 @@ BEGIN
     WHERE v.OldValue <> v.NewValue;
 END;";
     }
+    private static string _AddBookCopyInsertAuditTrigger()
+    {
+        return @"
+CREATE OR ALTER TRIGGER TR_BookCopy_Insert_Audit
+ON BookCopies
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @UserId INT = CAST(SESSION_CONTEXT(N'UserId') AS INT);
+
+    INSERT INTO BookActivityLogs
+    (
+        BookID,
+        CopyID,
+        UpdatedFieldName,
+        OldValue,
+        NewValue,
+        ActionType,
+        ActionDate,
+        ByUserID
+    )
+    SELECT
+        i.BookID,
+        i.CopyID,                   
+        NULL,                   
+        NULL,                   
+        NULL,                   
+        3,                      
+        GETDATE(),
+        @UserId
+    FROM inserted i;
+END;";
+
+
+    }
+
 
 
 }

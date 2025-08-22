@@ -12,6 +12,7 @@ internal class BorrowingConfiguration : IEntityTypeConfiguration<BorrowingRecord
         {
             x.HasTrigger("TR_BorrowingRecord_Update_Audit");
             x.HasTrigger("TR_BorrowingRecord_Insert_Audit");
+            x.HasTrigger("TR_BorrowingRecord_Insert");
         });
 
         builder.HasKey(br => br.Id);

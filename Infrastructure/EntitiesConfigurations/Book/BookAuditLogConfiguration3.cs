@@ -41,6 +41,9 @@ public class BookAuditLogConfiguration : IEntityTypeConfiguration<BookActivityLo
 
         builder.Property(x => x.ActionType)
             .HasConversion<byte>()
+            .HasComment("1: OpenReservation, 2: CloseReservation," +
+            " 3: AddCopy, 4: UpdateBookInfo, 5: AddBook, 6: DeactivateBook")
+
             .IsRequired();
 
         builder.Property(x => x.ActionDate)
