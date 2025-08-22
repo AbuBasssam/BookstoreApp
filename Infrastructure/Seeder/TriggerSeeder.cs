@@ -10,21 +10,15 @@ public static class TriggerSeeder
 
         await connection.OpenAsync();
 
-        await ExecuteSqlAsync(connection, _BookInsertAuditTrigger());
-        await ExecuteSqlAsync(connection, _BookUpdateAuditTrigger());
-        await ExecuteSqlAsync(connection, _BorrowingRecordInsertAuditTrigger());
-        await ExecuteSqlAsync(connection, _BorrowingRecordUpdateAuditTrigger());
-        await ExecuteSqlAsync(connection, _BorrowingRecordInsteadOfInsertTrigger());
-        await ExecuteSqlAsync(connection, _ReservationRecordInsertAuditTrigger());
-        await ExecuteSqlAsync(connection, _ReservationRecordUpdateAuditTrigger());
-        await ExecuteSqlAsync(connection, _SystemSettingsUpdateAuditTrigger());
-        await ExecuteSqlAsync(connection, _AddBookCopyInsertAuditTrigger());
-    }
-    private static async Task ExecuteSqlAsync(System.Data.Common.DbConnection connection, string sql)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        await command.ExecuteNonQueryAsync();
+        await SeederHelper.ExecuteSqlAsync(connection, _BookInsertAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _BookUpdateAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _BorrowingRecordInsertAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _BorrowingRecordUpdateAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _BorrowingRecordInsteadOfInsertTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _ReservationRecordInsertAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _ReservationRecordUpdateAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _SystemSettingsUpdateAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _AddBookCopyInsertAuditTrigger());
     }
     private static string _BookInsertAuditTrigger()
     {

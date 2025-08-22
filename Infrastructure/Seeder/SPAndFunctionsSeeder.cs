@@ -10,15 +10,9 @@ public class SPAndFunctionsSeeder
 
         await connection.OpenAsync();
 
-        await ExecuteSqlAsync(connection, _GetBookReservableFunction());
-        await ExecuteSqlAsync(connection, _GetBookBorrowableFunction());
-        await ExecuteSqlAsync(connection, _GetBookRatingFunction());
-    }
-    private static async Task ExecuteSqlAsync(System.Data.Common.DbConnection connection, string sql)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        await command.ExecuteNonQueryAsync();
+        await SeederHelper.ExecuteSqlAsync(connection, _GetBookReservableFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _GetBookBorrowableFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _GetBookRatingFunction());
     }
     private static string _GetBookBorrowableFunction()
     {
