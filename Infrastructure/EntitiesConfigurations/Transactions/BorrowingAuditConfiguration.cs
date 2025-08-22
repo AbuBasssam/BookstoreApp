@@ -23,6 +23,7 @@ public class BorrowingAuditConfiguration : IEntityTypeConfiguration<BorrowingAud
         builder.Property(x => x.Action)
             .HasColumnName("Action")
             .HasConversion<byte>()
+            .HasComment("1: Borrow Created, 2: Borrow Extended, 3: Borrow Returned")
             .IsRequired();
 
         builder.Property(x => x.UserID)

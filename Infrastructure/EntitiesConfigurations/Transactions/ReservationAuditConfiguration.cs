@@ -21,6 +21,12 @@ public class ReservationAuditConfiguration : IEntityTypeConfiguration<Reservatio
 
         builder.Property(x => x.Action)
             .HasConversion<byte>()
+            .HasComment("" +
+            "1: ReservationCreated," +
+            " 2: ConvertedToNotified," +
+            " 3: ConvertedToFulfilled," +
+            " 4: Expired," +
+            " 5: Canceled")
             .IsRequired();
 
         builder.Property(x => x.BorrowingID)
