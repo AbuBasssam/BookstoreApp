@@ -4,23 +4,22 @@ namespace Domain.Entities;
 public class Book : IEntity<int>
 {
     public int Id { get; set; }
-    public required string ISBN { get; set; }
-    public required string TitleEN { get; set; }
-    public required string TitleAR { get; set; }
-    public required string DescriptionEN { get; set; }
-    public required string DescriptionAR { get; set; }
-    public required int PublisherID { get; set; }
-    public required int AuthorID { get; set; }
-    public required int LanguageID { get; set; }
-    public required enCategory CategoryID { get; set; }
-    public required short PageCount { get; set; }
-    public required DateTime PublishDate { get; set; }
-    public required DateOnly AvailabilityDate { get; set; }
-    public required string Position { get; set; }
+    public string ISBN { get; set; }
+    public string TitleEN { get; set; }
+    public string TitleAR { get; set; }
+    public string DescriptionEN { get; set; }
+    public string DescriptionAR { get; set; }
+    public int PublisherID { get; set; }
+    public int AuthorID { get; set; }
+    public int LanguageID { get; set; }
+    public enCategory CategoryID { get; set; }
+    public short PageCount { get; set; }
+    public DateTime PublishDate { get; set; }
+    public DateOnly AvailabilityDate { get; set; }
+    public string Position { get; set; }
     public DateTime? LastWaitListOpenDate { get; set; }
     public bool IsActive { get; set; }
-    public required string CoverImage { get; set; }
-    public int NumberOfCopies => Copies?.Count ?? 0;
+    public string CoverImage { get; set; }
 
     // Navigation Properties
     public virtual Category Category { get; set; }

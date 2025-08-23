@@ -16,6 +16,7 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
 
         builder.ToTable("Books", b =>
         {
+            b.HasTrigger("TR_Book_Insert_Audit");
             b.HasTrigger("TR_Book_Update_Audit");
         });
 
