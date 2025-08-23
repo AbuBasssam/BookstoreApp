@@ -17,6 +17,7 @@ public static class TriggerSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _BorrowingRecordInsteadOfInsertTrigger());
         await SeederHelper.ExecuteSqlAsync(connection, _ReservationRecordInsertAuditTrigger());
         await SeederHelper.ExecuteSqlAsync(connection, _ReservationRecordUpdateAuditTrigger());
+        await SeederHelper.ExecuteSqlAsync(connection, _ReservationRecordInsteadOfInsertTrigger());
         await SeederHelper.ExecuteSqlAsync(connection, _SystemSettingsUpdateAuditTrigger());
         await SeederHelper.ExecuteSqlAsync(connection, _AddBookCopyInsertAuditTrigger());
     }
@@ -341,6 +342,81 @@ BEGIN
         @UserId,								  -- UserID من SESSION_CONTEXT
         GETDATE()								  -- Timestamp
     FROM inserted i;
+END;";
+    }
+    private static string _ReservationRecordInsteadOfInsertTrigger()
+    {
+        return @"
+CREATE OR ALTER TRIGGER [dbo].[TR_ReservationRecord_Insert]
+ON [dbo].[ReservationRecords]
+INSTEAD OF INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        DECLARE @MatchingRecords TABLE (
+            ReservationRecordID INT,
+            CopyID INT
+        );
+
+        /* 1) نرقّم صفوف inserted لكل BookID */
+        ;WITH NewReservations AS (
+            SELECT  
+                i.ReservationRecordID , -- من inserted
+                i.BookID, 
+                i.MemberID, 
+                i.ReservationDate, 
+                i.Type, 
+                i.Status, 
+                i.ExpirationDate,
+                ROW_NUMBER() OVER (PARTITION BY i.BookID ORDER BY i.ReservationDate, i.MemberID) AS rn
+            FROM inserted i
+        ),
+        Avail AS (
+            SELECT  
+                bc.BookID, 
+                bc.CopyID,
+                ROW_NUMBER() OVER (PARTITION BY bc.BookID ORDER BY bc.CopyID) AS rn
+            FROM dbo.BookCopies AS bc WITH (UPDLOCK, ROWLOCK, READPAST)
+            WHERE bc.IsOnHold = 0 
+              AND bc.IsAvailable = 0
+        )
+        INSERT INTO @MatchingRecords (ReservationRecordID, CopyID)
+        SELECT nr.ReservationRecordID, a.CopyID
+        FROM NewReservations nr
+        INNER JOIN Avail a 
+            ON nr.BookID = a.BookID 
+           AND nr.rn = a.rn;
+
+        /* 2) تحقق أن كل سجل تم تخصيص نسخة له */
+        IF (SELECT COUNT(*) FROM inserted) <> (SELECT COUNT(*) FROM @MatchingRecords)
+        BEGIN
+            RAISERROR (N'لا توجد نسخة متاحة للحجز لبعض السجلات المدخلة.', 16, 1);
+            ROLLBACK TRAN;
+            RETURN;
+        END
+
+        /* 3) نحدّث حالة النسخ المختارة إلى OnHold = 1 */
+        UPDATE bc
+        SET bc.IsOnHold = 1
+        FROM dbo.BookCopies AS bc
+        INNER JOIN @MatchingRecords m ON m.CopyID = bc.CopyID;
+
+        /* 4) إدراج سجلات الحجز بعد نجاح التخصيص */
+        INSERT INTO dbo.ReservationRecords
+            (BookID, MemberID, ReservationDate, Type, Status, ExpirationDate)
+        SELECT BookID, MemberID, ReservationDate, Type, Status, ExpirationDate
+        FROM inserted;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRAN;
+        THROW;
+    END CATCH
 END;";
     }
     private static string _ReservationRecordUpdateAuditTrigger()
