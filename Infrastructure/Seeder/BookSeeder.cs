@@ -24,8 +24,8 @@ public class BookSeeder
                 // إنشاء مؤلف جديد
                 var author = new Author
                 {
-                    AuthorNameEN = $"Author {category} {i}",
-                    AuthorNameAR = $"مؤلف {category} {i}",
+                    NameEN = $"Author {category} {i}",
+                    NameAR = $"مؤلف {category} {i}",
                     BirthDate = null,
                     Bio = $"Author for {category} book "
                 };

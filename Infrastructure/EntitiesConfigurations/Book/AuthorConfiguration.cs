@@ -11,8 +11,8 @@ public class AuthorConfiguration : IEntityTypeConfiguration<Author>
         builder.HasKey(a => a.Id);
         builder.ToTable("Authors");
         builder.Property(a => a.Id).HasColumnName("AuthorID").ValueGeneratedOnAdd();
-        builder.Property(a => a.AuthorNameEN).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
-        builder.Property(a => a.AuthorNameAR).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+        builder.Property(a => a.NameEN).HasColumnName("AuthorNameEN").HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+        builder.Property(a => a.NameAR).HasColumnName("AuthorNameAR").HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
         builder.Property(a => a.Bio).HasMaxLength(200);
     }
 }

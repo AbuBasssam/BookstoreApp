@@ -3,8 +3,8 @@
 public class Author : IEntity<int>
 {
     public int Id { get; set; }//AuthorID
-    public string AuthorNameEN { get; set; }
-    public string AuthorNameAR { get; set; }
+    public string NameEN { get; set; }
+    public string NameAR { get; set; }
     public DateTime? BirthDate { get; set; }
     public string Bio { get; set; }
     // Navigation Properties
