@@ -8,7 +8,6 @@ public static class TriggerSeeder
     {
         var connection = context.Database.GetDbConnection();
 
-        await connection.OpenAsync();
 
         await SeederHelper.ExecuteSqlAsync(connection, _BookInsertAuditTrigger());
         await SeederHelper.ExecuteSqlAsync(connection, _BookUpdateAuditTrigger());

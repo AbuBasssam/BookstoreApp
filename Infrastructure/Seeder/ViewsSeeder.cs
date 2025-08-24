@@ -8,7 +8,6 @@ public static class ViewsSeeder
     {
         var connection = context.Database.GetDbConnection();
 
-        await connection.OpenAsync();
         await SeederHelper.ExecuteSqlAsync(connection, _GetBooksView());
 
     }

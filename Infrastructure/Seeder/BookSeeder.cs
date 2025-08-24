@@ -1,5 +1,4 @@
 ﻿using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Seeder;
@@ -12,39 +11,27 @@ public class BookSeeder
         if (await context.Books.AnyAsync())
             return;
 
-        var languages = await context.Languages.ToListAsync();
+        var languages = await context.Languages.Select(l => l.Id).ToListAsync();
+        var categories = await context.Categories.Select(c => c.Id).ToListAsync();
+        var publishers = await context.Publishers.Select(p => p.Id).ToListAsync();
+        var authors = await context.Authors.Select(a => a.Id).ToListAsync();
 
         var books = new List<Book>();
+        var usersIDsQuery = context.Users.Where(u => u.RoleID.Equals(2)).Select(u => u.Id);
 
 
-        foreach (enCategory category in Enum.GetValues(typeof(enCategory)))
+        foreach (var category in categories)
         {
             for (int i = 1; i <= 5; i++)
             {
-                // إنشاء مؤلف جديد
-                var author = new Author
-                {
-                    NameEN = $"Author {category} {i}",
-                    NameAR = $"مؤلف {category} {i}",
-                    BirthDate = null,
-                    Bio = $"Author for {category} book "
-                };
-                await context.Authors.AddAsync(author);
-                await context.SaveChangesAsync();
-
-
-                // إنشاء دار نشر جديدة
-                var publisher = new Publisher
-                {
-                    NameEN = $"Publisher {category} {i}",
-                    NameAR = $"دار نشر {category} {i}"
-                };
-                await context.Publishers.AddAsync(publisher);
-                await context.SaveChangesAsync();
 
 
                 // اختيار لغة عشوائية من جدول اللغات
-                var lang = languages[_rand.Next(languages.Count)];
+                var langId = languages[_rand.Next(languages.Count)];
+                // اختيار ناشر عشوائي من جدول الناشرين
+                int publisherId = publishers[_rand.Next(publishers.Count)];
+                //أختيار مؤلف عشوائي من جدول المؤلفين
+                var authorId = authors[_rand.Next(authors.Count)];
 
                 // توليد Position مطابق للأنماط المطلوبة
                 string position = (_rand.Next(2) == 0)
@@ -58,9 +45,9 @@ public class BookSeeder
                     TitleAR = $"كتاب {i} من {category}",
                     DescriptionEN = $"Description for {category} Book {i}",
                     DescriptionAR = $"وصف الكتاب {i} من {category}",
-                    PublisherID = publisher.Id,
-                    AuthorID = author.Id,
-                    LanguageID = lang.Id,
+                    PublisherID = publisherId,
+                    AuthorID = authorId,
+                    LanguageID = langId,
                     CategoryID = category,
                     PageCount = (short)_rand.Next(100, 600),
                     PublishDate = DateTime.Today.AddYears(-_rand.Next(1, 20)),
@@ -69,6 +56,11 @@ public class BookSeeder
                     LastWaitListOpenDate = null,
                     IsActive = true,
                     CoverImage = "default_cover.jpg",
+                    Copies = Enumerable.Range(1, 5).Select(_ => new BookCopy
+                    {
+                        IsAvailable = true,
+                        IsOnHold = false
+                    }).ToList()
 
                 };
 
@@ -85,8 +77,8 @@ public class BookSeeder
 
         foreach (var book in ratedBooks)
         {
-            AddBookRatings(book);
-            AddBookCopies(book, 5);
+            AddBookRatings(book, usersIDsQuery.ToList());
+            // AddBookCopies(book, 5);
 
         }
 
@@ -96,9 +88,9 @@ public class BookSeeder
 
 
     }
-    private static void AddBookRatings(Book book)
+    private static void AddBookRatings(Book book, List<int> userIds)
     {
-        var userIds = new List<int> { 1009, 1010, 1011, 1012, 1013 };
+
         book.Ratings ??= new List<BookRating>();
 
         foreach (var userId in userIds)

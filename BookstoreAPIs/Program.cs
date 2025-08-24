@@ -79,10 +79,15 @@ using (var scope = app.Services.CreateScope())
     await RoleSeeder.SeedAsync(roleManager);
     await UserSeeder.SeedAsync(userManager);
     await SystemSettingsSeeder.SeedAsync(DbContext);
-    await BookSeeder.SeedAsync(DbContext);
     await LanguageSeeder.SeedAsync(DbContext);
+    await CategorySeeder.SeedAsync(DbContext);
+    await PublisherSeeder.SeedAsync(DbContext);
+    await AuthorSeeder.SeedAsync(DbContext);
+    await BookSeeder.SeedAsync(DbContext);
     await SPAndFunctionsSeeder.SeedAsync(DbContext);
     await TriggerSeeder.SeedAsync(DbContext);
+    await ViewsSeeder.SeedAsync(DbContext);
+
 
 
 }
