@@ -432,8 +432,8 @@ BEGIN
     -- Insert into ReservationAudits table only if the status has changed
     IF NOT EXISTS (
         SELECT 1
-        FROM inserted i
-        INNER JOIN deleted d ON i.ReservationRecordID = d.ReservationRecordID
+        FROM inserted i INNER JOIN deleted d
+		ON i.ReservationRecordID = d.ReservationRecordID
         WHERE i.Status <> d.Status
     )
     BEGIN
@@ -442,7 +442,6 @@ BEGIN
 
     DECLARE @UserId INT = ISNULL(CAST(SESSION_CONTEXT(N'UserId') AS INT), NULL);
 
-    -- ===== تسجيل جميع التغييرات (عدا Fulfilled) =====
     INSERT INTO ReservationAudits
     (
         ReservationID,
@@ -453,21 +452,29 @@ BEGIN
     )
     SELECT
         i.ReservationRecordID,
-        CASE i.Status
+		CASE i.Status
             WHEN 2 THEN 2 -- ConvertedToNotified
+			WHEN 3 THEN 3 -- ConvertedToFulfilled
             WHEN 4 THEN 4 -- Expired
             WHEN 5 THEN 5 -- Canceled
         END AS Action,
-        NULL, 
-        @UserId,
+
+		CASE 
+			WHEN i.Status = 3 THEN br.BorrowingRecordID
+        ELSE NULL
+		END,
+		@UserId,
         GETDATE()
     FROM inserted i
     INNER JOIN deleted d ON i.ReservationRecordID = d.ReservationRecordID
+	LEFT JOIN BorrowingRecords br
+	ON br.ReservationRecordID = i.ReservationRecordID AND i.Status = 3
+
     WHERE i.Status <> d.Status
       AND i.Status <> 1     -- ignore Pending status
-      AND i.Status <> 3     -- ignore Fulfilled status
       AND (
           (i.Status = 2 AND d.Status = 1) OR -- Pending → Notified
+		  (i.Status = 3 AND d.Status = 2) OR -- Notified → Fulfilled
           (i.Status = 4 AND d.Status = 2) OR -- Notified → Expired
           (i.Status = 5 AND d.Status = 1)    -- Pending → Cancelled
       );
