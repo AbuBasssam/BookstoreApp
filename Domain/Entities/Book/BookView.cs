@@ -8,14 +8,14 @@ public class BookView : IEntity<int>
     public string TitleAR { get; set; } = null!;
     public string DescriptionEN { get; set; } = null!;
     public string DescriptionAR { get; set; } = null!;
-    public string PublisherEN { get; set; } = null!;
-    public string PublisherAR { get; set; } = null!;
-    public string AuthorEN { get; set; } = null!;
-    public string AuthorAR { get; set; } = null!;
+    public string PublisherNameEN { get; set; } = null!;
+    public string PublisherNameAR { get; set; } = null!;
+    public string AuthorNameEN { get; set; } = null!;
+    public string AuthorNameAR { get; set; } = null!;
     public string LanguageEN { get; set; } = null!;
     public string LanguageAR { get; set; } = null!;
-    public string CategoryEN { get; set; } = null!;
-    public string CategoryAR { get; set; } = null!;
+    public string CategoryNameEN { get; set; } = null!;
+    public string CategoryNameAR { get; set; } = null!;
     public short PageCount { get; set; }
     public DateTime PublishDate { get; set; }
     public DateOnly AvailabilityDate { get; set; }

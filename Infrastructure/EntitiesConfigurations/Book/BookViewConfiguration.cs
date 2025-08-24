@@ -18,14 +18,14 @@ public class BookViewConfiguration : IEntityTypeConfiguration<BookView>
         builder.Property(b => b.TitleAR).HasMaxLength(50);
         builder.Property(b => b.DescriptionEN).HasMaxLength(300);
         builder.Property(b => b.DescriptionAR).HasMaxLength(300);
-        builder.Property(b => b.PublisherEN).HasMaxLength(50);
-        builder.Property(b => b.PublisherAR).HasMaxLength(50);
-        builder.Property(b => b.AuthorEN).HasMaxLength(50);
-        builder.Property(b => b.AuthorAR).HasMaxLength(50);
+        builder.Property(b => b.PublisherNameEN).HasMaxLength(50);
+        builder.Property(b => b.PublisherNameAR).HasMaxLength(50);
+        builder.Property(b => b.AuthorNameEN).HasMaxLength(50);
+        builder.Property(b => b.AuthorNameAR).HasMaxLength(50);
         builder.Property(b => b.LanguageEN).HasMaxLength(50);
         builder.Property(b => b.LanguageAR).HasMaxLength(50);
-        builder.Property(b => b.CategoryEN).HasMaxLength(50);
-        builder.Property(b => b.CategoryAR).HasMaxLength(50);
+        builder.Property(b => b.CategoryNameEN).HasMaxLength(50);
+        builder.Property(b => b.CategoryNameAR).HasMaxLength(50);
         builder.Property(b => b.Position).HasMaxLength(20);
         builder.Property(b => b.CoverImage).HasMaxLength(250);
 
