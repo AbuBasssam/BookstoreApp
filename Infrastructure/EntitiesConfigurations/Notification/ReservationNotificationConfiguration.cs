@@ -8,7 +8,7 @@ public class ReservationNotificationConfiguration : IEntityTypeConfiguration<Res
 {
     public void Configure(EntityTypeBuilder<ReservationNotification> builder)
     {
-        builder.ToTable("ReservationNotification");
+        builder.ToTable("ReservationNotifications");
 
         builder.HasKey(x => x.Id);
 

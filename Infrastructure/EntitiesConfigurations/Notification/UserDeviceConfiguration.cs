@@ -12,7 +12,7 @@ internal class UserDeviceConfiguration : IEntityTypeConfiguration<UserDevice>
 
         // Primary Key
         builder.HasKey(d => d.Id);
-        
+
         builder.Property(d => d.Id)
             .HasColumnName("DeviceID")
             .ValueGeneratedOnAdd();
@@ -21,7 +21,7 @@ internal class UserDeviceConfiguration : IEntityTypeConfiguration<UserDevice>
             .HasMaxLength(50);
 
         builder.Property(d => d.Platform)
-            .HasConversion<byte>()
+            .HasConversion<byte>().HasComment("1: Android, 2: ios, 3: Web")
             .IsRequired();
 
         builder.Property(d => d.LastActive)

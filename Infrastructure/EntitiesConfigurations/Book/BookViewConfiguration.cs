@@ -12,7 +12,7 @@ public class BookViewConfiguration : IEntityTypeConfiguration<BookView>
         builder.ToView("vw_Books");
 
         // Columns configuration
-        builder.Property(b => b.Id).HasColumnName("BookId");
+        builder.Property(b => b.Id).HasColumnName("BookID");
         builder.Property(b => b.ISBN).HasMaxLength(20);
         builder.Property(b => b.TitleEN).HasMaxLength(50);
         builder.Property(b => b.TitleAR).HasMaxLength(50);

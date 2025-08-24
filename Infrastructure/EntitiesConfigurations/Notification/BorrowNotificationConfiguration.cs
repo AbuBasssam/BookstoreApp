@@ -8,7 +8,7 @@ public class BorrowNotificationConfiguration : IEntityTypeConfiguration<BorrowNo
 {
     public void Configure(EntityTypeBuilder<BorrowNotification> builder)
     {
-        builder.ToTable("BorrowNotification");
+        builder.ToTable("BorrowNotifications");
 
         builder.HasKey(x => x.Id);
 

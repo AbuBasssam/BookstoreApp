@@ -12,8 +12,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("CategoryID");
-        builder.Property(c => c.NameEN).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
-        builder.Property(c => c.NameAR).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+        builder.Property(c => c.NameEN).HasColumnName("CategoryNameEN").HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+        builder.Property(c => c.NameAR).HasColumnName("CategoryNameAR").HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
     }
 }
 

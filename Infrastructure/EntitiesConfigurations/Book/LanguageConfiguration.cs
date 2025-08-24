@@ -20,11 +20,13 @@ internal class LanguageConfiguration : IEntityTypeConfiguration<Language>
             .IsRequired();
 
         builder.Property(l => l.NameEN)
+            .HasColumnName("LanguageNameEN")
             .HasColumnType("NVARCHAR(50)")
             .IsRequired();
 
 
         builder.Property(l => l.NameAR)
+            .HasColumnName("LanguageNameAR")
             .HasColumnType("NVARCHAR(50)")
             .IsRequired();
 

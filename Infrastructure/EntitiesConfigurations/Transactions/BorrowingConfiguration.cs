@@ -13,14 +13,15 @@ internal class BorrowingConfiguration : IEntityTypeConfiguration<BorrowingRecord
             x.HasTrigger("TR_BorrowingRecord_Update_Audit");
             x.HasTrigger("TR_BorrowingRecord_Insert_Audit");
             x.HasTrigger("TR_BorrowingRecord_Insert");
+            x.HasCheckConstraint("CK_ReturnDate", "[ReturnDate] IS NULL OR [ReturnDate] > [BorrowingDate]");
+            x.HasCheckConstraint("CK_DueDate", "[DueDate] >= [BorrowingDate]");
         });
 
         builder.HasKey(br => br.Id);
 
         builder.Property(br => br.Id).HasColumnName("BorrowingRecordID");
 
-        builder.Property(br => br.BorrowingDate)
-               .HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(br => br.BorrowingDate).HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(br => br.RenewalCount)
             .HasColumnType("tinyint")
@@ -35,6 +36,7 @@ internal class BorrowingConfiguration : IEntityTypeConfiguration<BorrowingRecord
                .WithMany()
                .HasForeignKey(l => l.MemberID)
                .OnDelete(DeleteBehavior.Restrict);
+
 
         builder.HasOne(l => l.Admin)
                .WithMany()

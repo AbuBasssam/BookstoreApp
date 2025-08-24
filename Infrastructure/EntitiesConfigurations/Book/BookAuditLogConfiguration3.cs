@@ -55,7 +55,7 @@ public class BookAuditLogConfiguration : IEntityTypeConfiguration<BookActivityLo
 
         // Foreign key relationships
         builder.HasOne(x => x.Book)
-            .WithMany()
+            .WithMany(b => b.AuditLogs)
             .HasForeignKey(x => x.BookID)
             .OnDelete(DeleteBehavior.Restrict);
 

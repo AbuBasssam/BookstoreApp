@@ -24,6 +24,7 @@ internal class ReservationConfiguration : IEntityTypeConfiguration<ReservationRe
 
         builder.Property(r => r.Status)
                .HasConversion<byte>()
+               .HasComment("1: Pending, 2: Notified, 3: Fulfilled, 4: Expired, 5:Cancelled")
                .IsRequired();
 
         builder.Property(r => r.ExpirationDate)

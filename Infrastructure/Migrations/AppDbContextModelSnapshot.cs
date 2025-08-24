@@ -34,16 +34,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AuthorNameAR")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<string>("AuthorNameEN")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
-
                     b.Property<string>("Bio")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -51,6 +41,18 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("NameAR")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("AuthorNameAR");
+
+                    b.Property<string>("NameEN")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("AuthorNameEN");
 
                     b.HasKey("Id");
 
@@ -139,6 +141,8 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("Books", null, t =>
                         {
+                            t.HasTrigger("TR_Book_Insert_Audit");
+
                             t.HasTrigger("TR_Book_Update_Audit");
 
                             t.HasCheckConstraint("CK_Books_Position_Format", "Position LIKE '[A-Z][0-9][0-9]%' OR Position LIKE '[A-Z][0-9][0-9]-[0-9A-Za-z]%'");
@@ -160,14 +164,12 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime");
 
                     b.Property<byte>("ActionType")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint")
+                        .HasComment("1: OpenReservation, 2: CloseReservation, 3: AddCopy, 4: UpdateBookInfo, 5: AddBook, 6: DeactivateBook");
 
                     b.Property<int>("BookID")
                         .HasColumnType("int")
                         .HasColumnName("BookID");
-
-                    b.Property<int?>("BookId")
-                        .HasColumnType("int");
 
                     b.Property<int?>("ByUserID")
                         .HasColumnType("int");
@@ -191,8 +193,6 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BookID");
-
-                    b.HasIndex("BookId");
 
                     b.HasIndex("ByUserID")
                         .HasDatabaseName("IX_BookAuditLog_ByUserID");
@@ -305,7 +305,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("Id")
                         .HasColumnType("int")
-                        .HasColumnName("BookId");
+                        .HasColumnName("BookID");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -389,7 +389,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("NotificationID");
 
-                    b.ToTable("BorrowNotification", (string)null);
+                    b.ToTable("BorrowNotifications", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.BorrowingAudit", b =>
@@ -403,7 +403,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<byte>("Action")
                         .HasColumnType("tinyint")
-                        .HasColumnName("Action");
+                        .HasColumnName("Action")
+                        .HasComment("1: Borrow Created, 2: Borrow Extended, 3: Borrow Returned");
 
                     b.Property<int>("BorrowingID")
                         .HasColumnType("int")
@@ -461,6 +462,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("tinyint")
                         .HasDefaultValue((byte)0);
 
+                    b.Property<int?>("ReservationRecordID")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ReturnDate")
                         .HasColumnType("datetime2");
 
@@ -472,11 +476,19 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("MemberID");
 
+                    b.HasIndex("ReservationRecordID");
+
                     b.ToTable("BorrowingRecords", null, t =>
                         {
+                            t.HasTrigger("TR_BorrowingRecord_Insert");
+
                             t.HasTrigger("TR_BorrowingRecord_Insert_Audit");
 
                             t.HasTrigger("TR_BorrowingRecord_Update_Audit");
+
+                            t.HasCheckConstraint("CK_DueDate", "[DueDate] >= [BorrowingDate]");
+
+                            t.HasCheckConstraint("CK_ReturnDate", "[ReturnDate] IS NULL OR [ReturnDate] > [BorrowingDate]");
                         });
 
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
@@ -491,12 +503,14 @@ namespace Infrastructure.Migrations
                     b.Property<string>("NameAR")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("CategoryNameAR");
 
                     b.Property<string>("NameEN")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("CategoryNameEN");
 
                     b.HasKey("Id");
 
@@ -558,11 +572,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("NameAR")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("LanguageNameAR");
 
                     b.Property<string>("NameEN")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("LanguageNameEN");
 
                     b.HasKey("Id");
 
@@ -618,14 +634,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("UserDeviceID")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserDeviceID");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Notifications", (string)null);
                 });
@@ -676,11 +687,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("NameAR")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("PublisherNameAR");
 
                     b.Property<string>("NameEN")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("PublisherNameEN");
 
                     b.HasKey("Id");
 
@@ -697,7 +710,8 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<byte>("Action")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint")
+                        .HasComment("1: ReservationCreated, 2: ConvertedToNotified, 3: ConvertedToFulfilled, 4: Expired, 5: Canceled");
 
                     b.Property<int?>("BorrowingID")
                         .HasColumnType("int");
@@ -744,7 +758,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ReservationID");
 
-                    b.ToTable("ReservationNotification", (string)null);
+                    b.ToTable("ReservationNotifications", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ReservationRecord", b =>
@@ -771,7 +785,8 @@ namespace Infrastructure.Migrations
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<byte>("Status")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint")
+                        .HasComment("1: Pending, 2: Notified, 3: Fulfilled, 4: Expired, 5:Cancelled");
 
                     b.Property<byte>("Type")
                         .HasColumnType("tinyint");
@@ -990,7 +1005,8 @@ namespace Infrastructure.Migrations
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<byte>("Platform")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint")
+                        .HasComment("1: Android, 2: ios, 3: Web");
 
                     b.Property<string>("Token")
                         .IsRequired()
@@ -1152,14 +1168,10 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.BookActivityLog", b =>
                 {
                     b.HasOne("Domain.Entities.Book", "Book")
-                        .WithMany()
+                        .WithMany("AuditLogs")
                         .HasForeignKey("BookID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Domain.Entities.Book", null)
-                        .WithMany("AuditLogs")
-                        .HasForeignKey("BookId");
 
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany()
@@ -1265,11 +1277,17 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.ReservationRecord", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationRecordID");
+
                     b.Navigation("Admin");
 
                     b.Navigation("BookCopy");
 
                     b.Navigation("Member");
+
+                    b.Navigation("Reservation");
                 });
 
             modelBuilder.Entity("Domain.Entities.Fine", b =>
@@ -1290,10 +1308,6 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("UserDeviceID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Domain.Entities.User", null)
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId");
 
                     b.Navigation("UserDevice");
                 });
@@ -1480,8 +1494,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Navigation("Devices");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("RefreshTokens");
                 });

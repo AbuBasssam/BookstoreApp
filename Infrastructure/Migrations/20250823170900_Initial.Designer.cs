@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250810171530_DeleteUserIDFromNotificationTable")]
-    partial class DeleteUserIDFromNotificationTable
+    [Migration("20250823170900_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,16 +37,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AuthorNameAR")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<string>("AuthorNameEN")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
-
                     b.Property<string>("Bio")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -54,6 +44,18 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("NameAR")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("AuthorNameAR");
+
+                    b.Property<string>("NameEN")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("AuthorNameEN");
 
                     b.HasKey("Id");
 
@@ -96,10 +98,13 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<int>("LanguageID")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("LastReservationOpenDate")
+                    b.Property<DateTime?>("LastWaitListOpenDate")
                         .HasColumnType("datetime2(7)");
 
                     b.Property<short>("PageCount")
@@ -139,11 +144,17 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("Books", null, t =>
                         {
+                            t.HasTrigger("TR_Book_Insert_Audit");
+
+                            t.HasTrigger("TR_Book_Update_Audit");
+
                             t.HasCheckConstraint("CK_Books_Position_Format", "Position LIKE '[A-Z][0-9][0-9]%' OR Position LIKE '[A-Z][0-9][0-9]-[0-9A-Za-z]%'");
                         });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
-            modelBuilder.Entity("Domain.Entities.BookAuditLog", b =>
+            modelBuilder.Entity("Domain.Entities.BookActivityLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -156,14 +167,12 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime");
 
                     b.Property<byte>("ActionType")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint")
+                        .HasComment("1: OpenReservation, 2: CloseReservation, 3: AddCopy, 4: UpdateBookInfo, 5: AddBook, 6: DeactivateBook");
 
                     b.Property<int>("BookID")
                         .HasColumnType("int")
                         .HasColumnName("BookID");
-
-                    b.Property<int?>("BookId")
-                        .HasColumnType("int");
 
                     b.Property<int?>("ByUserID")
                         .HasColumnType("int");
@@ -188,14 +197,12 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("BookID");
 
-                    b.HasIndex("BookId");
-
                     b.HasIndex("ByUserID")
                         .HasDatabaseName("IX_BookAuditLog_ByUserID");
 
                     b.HasIndex("CopyID");
 
-                    b.ToTable("BookAuditLogs", (string)null);
+                    b.ToTable("BookActivityLogs", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.BookCopy", b =>
@@ -235,9 +242,6 @@ namespace Infrastructure.Migrations
                     b.Property<int>("BookID")
                         .HasColumnType("int");
 
-                    b.Property<int?>("BookId")
-                        .HasColumnType("int");
-
                     b.Property<byte>("Rating")
                         .HasColumnType("tinyint")
                         .HasColumnName("Rating");
@@ -247,10 +251,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookID")
-                        .HasDatabaseName("IX_BookRating_BookID");
-
-                    b.HasIndex("BookId");
+                    b.HasIndex("BookID");
 
                     b.HasIndex("UserID");
 
@@ -262,45 +263,112 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.BookView", b =>
                 {
-                    b.Property<int>("AuthorID")
-                        .HasColumnType("int");
+                    b.Property<string>("AuthorAR")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("CategoryID")
-                        .HasColumnType("int");
+                    b.Property<string>("AuthorEN")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateOnly>("AvailabilityDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CategoryAR")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CategoryEN")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CoverImage")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("DescriptionAR")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("DescriptionEN")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("ISBN")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Id")
                         .HasColumnType("int")
-                        .HasColumnName("BookId");
+                        .HasColumnName("BookID");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<bool>("IsAvailable")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsBorrowable")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReservable")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LanguageAR")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("LanguageEN")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("LastWaitListOpenDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<short>("PageCount")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime>("PublishDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PublisherAR")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PublisherEN")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("Rating")
+                        .HasColumnType("decimal(3,2)");
+
                     b.Property<string>("TitleAR")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("TitleEN")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar(50)");
 
                     b.ToTable((string)null);
 
-                    b.ToView("BookView", (string)null);
+                    b.ToView("vw_Books", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.BorrowNotification", b =>
@@ -324,7 +392,46 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("NotificationID");
 
-                    b.ToTable("BorrowNotification", (string)null);
+                    b.ToTable("BorrowNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.BorrowingAudit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("AuditID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte>("Action")
+                        .HasColumnType("tinyint")
+                        .HasColumnName("Action")
+                        .HasComment("1: Borrow Created, 2: Borrow Extended, 3: Borrow Returned");
+
+                    b.Property<int>("BorrowingID")
+                        .HasColumnType("int")
+                        .HasColumnName("BorrowingID");
+
+                    b.Property<DateTime?>("NewDueDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("OldDueDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BorrowingID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("BorrowingAudits", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.BorrowingRecord", b =>
@@ -336,22 +443,19 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ActualBorrowingDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("AdminID")
+                    b.Property<int>("AdminID")
                         .HasColumnType("int");
 
                     b.Property<int>("BookCopyID")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("InitialBorrowingDate")
+                    b.Property<DateTime>("BorrowingDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("MemberID")
                         .HasColumnType("int");
@@ -361,13 +465,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("tinyint")
                         .HasDefaultValue((byte)0);
 
+                    b.Property<int?>("ReservationRecordID")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ReturnDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<byte>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint")
-                        .HasDefaultValue((byte)1);
 
                     b.HasKey("Id");
 
@@ -377,7 +479,22 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("MemberID");
 
-                    b.ToTable("BorrowingRecords", (string)null);
+                    b.HasIndex("ReservationRecordID");
+
+                    b.ToTable("BorrowingRecords", null, t =>
+                        {
+                            t.HasTrigger("TR_BorrowingRecord_Insert");
+
+                            t.HasTrigger("TR_BorrowingRecord_Insert_Audit");
+
+                            t.HasTrigger("TR_BorrowingRecord_Update_Audit");
+
+                            t.HasCheckConstraint("CK_DueDate", "[DueDate] >= [BorrowingDate]");
+
+                            t.HasCheckConstraint("CK_ReturnDate", "[ReturnDate] IS NULL OR [ReturnDate] > [BorrowingDate]");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Domain.Entities.Category", b =>
@@ -389,12 +506,14 @@ namespace Infrastructure.Migrations
                     b.Property<string>("NameAR")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("CategoryNameAR");
 
                     b.Property<string>("NameEN")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar");
+                        .HasColumnType("nvarchar")
+                        .HasColumnName("CategoryNameEN");
 
                     b.HasKey("Id");
 
@@ -456,11 +575,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("NameAR")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("LanguageNameAR");
 
                     b.Property<string>("NameEN")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("LanguageNameEN");
 
                     b.HasKey("Id");
 
@@ -516,14 +637,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("UserDeviceID")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserDeviceID");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Notifications", (string)null);
                 });
@@ -574,15 +690,54 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("NameAR")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("PublisherNameAR");
 
                     b.Property<string>("NameEN")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR(50)");
+                        .HasColumnType("NVARCHAR(50)")
+                        .HasColumnName("PublisherNameEN");
 
                     b.HasKey("Id");
 
                     b.ToTable("Publishers", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.ReservationAudit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("AuditID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte>("Action")
+                        .HasColumnType("tinyint")
+                        .HasComment("1: ReservationCreated, 2: ConvertedToNotified, 3: ConvertedToFulfilled, 4: Expired, 5: Canceled");
+
+                    b.Property<int?>("BorrowingID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReservationID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime")
+                        .HasColumnName("Timestamp");
+
+                    b.Property<int?>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BorrowingID");
+
+                    b.HasIndex("ReservationID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("ReservationAudits", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ReservationNotification", b =>
@@ -606,7 +761,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ReservationID");
 
-                    b.ToTable("ReservationNotification", (string)null);
+                    b.ToTable("ReservationNotifications", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ReservationRecord", b =>
@@ -621,10 +776,8 @@ namespace Infrastructure.Migrations
                     b.Property<int>("BookID")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsCancelled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("MemberID")
                         .HasColumnType("int");
@@ -633,6 +786,13 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint")
+                        .HasComment("1: Pending, 2: Notified, 3: Fulfilled, 4: Expired, 5:Cancelled");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
@@ -677,48 +837,70 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.SystemSettings", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("SettingID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<decimal>("FinePerDay")
                         .HasColumnType("decimal(5,2)");
 
-                    b.Property<int>("GracePeriodDays")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastUpdated")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
                     b.Property<int>("MaxLoanDays")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(14);
+                        .HasColumnType("int");
 
                     b.Property<int>("MaxLoansPerMember")
                         .HasColumnType("int");
 
                     b.Property<int>("MaxRenewals")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
+                        .HasColumnType("int");
+
+                    b.Property<byte>("PickupExpiryHours")
+                        .HasColumnType("tinyint");
 
                     b.Property<int>("RenewalExtensionDays")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("ReservationExpiryDays")
+                        .HasColumnType("tinyint");
+
+                    b.ToTable("SystemSettings", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.SystemSettingsAudit", b =>
+                {
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasDefaultValue(7);
+                        .HasColumnName("AuditID");
 
-                    b.Property<int>("ReservationExpiryDays")
-                        .HasColumnType("int");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ChangeDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("ChangeDate");
+
+                    b.Property<int>("ChangedBy")
+                        .HasColumnType("int")
+                        .HasColumnName("ChangedBy");
+
+                    b.Property<string>("NewValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("NewValue");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("OldValue");
+
+                    b.Property<string>("SettingName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("SettingName");
 
                     b.HasKey("Id");
 
-                    b.ToTable("SystemSettings", (string)null);
+                    b.HasIndex("ChangedBy")
+                        .HasDatabaseName("IX_SystemSettingsAudits_ChangedBy");
+
+                    b.ToTable("SystemSettingsAudits", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -826,7 +1008,8 @@ namespace Infrastructure.Migrations
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<byte>("Platform")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint")
+                        .HasComment("1: Android, 2: ios, 3: Web");
 
                     b.Property<string>("Token")
                         .IsRequired()
@@ -985,17 +1168,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("Publisher");
                 });
 
-            modelBuilder.Entity("Domain.Entities.BookAuditLog", b =>
+            modelBuilder.Entity("Domain.Entities.BookActivityLog", b =>
                 {
                     b.HasOne("Domain.Entities.Book", "Book")
-                        .WithMany()
+                        .WithMany("AuditLogs")
                         .HasForeignKey("BookID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Domain.Entities.Book", null)
-                        .WithMany("AuditLogs")
-                        .HasForeignKey("BookId");
 
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany()
@@ -1027,14 +1206,10 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.BookRating", b =>
                 {
                     b.HasOne("Domain.Entities.Book", "Book")
-                        .WithMany()
+                        .WithMany("Ratings")
                         .HasForeignKey("BookID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Domain.Entities.Book", null)
-                        .WithMany("Ratings")
-                        .HasForeignKey("BookId");
 
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany()
@@ -1066,12 +1241,32 @@ namespace Infrastructure.Migrations
                     b.Navigation("Notification");
                 });
 
+            modelBuilder.Entity("Domain.Entities.BorrowingAudit", b =>
+                {
+                    b.HasOne("Domain.Entities.BorrowingRecord", "Borrowing")
+                        .WithMany()
+                        .HasForeignKey("BorrowingID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Borrowing");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.BorrowingRecord", b =>
                 {
                     b.HasOne("Domain.Entities.User", "Admin")
                         .WithMany()
                         .HasForeignKey("AdminID")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Domain.Entities.BookCopy", "BookCopy")
                         .WithMany("BorrowingRecords")
@@ -1085,11 +1280,17 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.ReservationRecord", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationRecordID");
+
                     b.Navigation("Admin");
 
                     b.Navigation("BookCopy");
 
                     b.Navigation("Member");
+
+                    b.Navigation("Reservation");
                 });
 
             modelBuilder.Entity("Domain.Entities.Fine", b =>
@@ -1111,10 +1312,6 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.User", null)
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId");
-
                     b.Navigation("UserDevice");
                 });
 
@@ -1125,6 +1322,31 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ReservationAudit", b =>
+                {
+                    b.HasOne("Domain.Entities.BorrowingRecord", "Borrowing")
+                        .WithMany()
+                        .HasForeignKey("BorrowingID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.ReservationRecord", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Borrowing");
+
+                    b.Navigation("Reservation");
 
                     b.Navigation("User");
                 });
@@ -1165,6 +1387,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("Book");
 
                     b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SystemSettingsAudit", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("ChangedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -1264,8 +1497,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Navigation("Devices");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("RefreshTokens");
                 });

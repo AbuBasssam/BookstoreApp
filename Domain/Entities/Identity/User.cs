@@ -11,7 +11,6 @@ public class User : IdentityUser<int>
 
     public virtual ICollection<UserRefreshToken>? RefreshTokens { get; }
     public virtual ICollection<UserDevice>? Devices { get; }
-    public virtual ICollection<Notification>? Notifications { get; }
 
     #endregion
 

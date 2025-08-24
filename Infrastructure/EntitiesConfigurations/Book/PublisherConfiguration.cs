@@ -18,10 +18,12 @@ internal class PublisherConfiguration : IEntityTypeConfiguration<Publisher>
             .ValueGeneratedOnAdd();
 
         builder.Property(p => p.NameEN)
+            .HasColumnName("PublisherNameEN")
             .HasColumnType("NVARCHAR(50)")
             .IsRequired();
 
         builder.Property(p => p.NameAR)
+            .HasColumnName("PublisherNameAR")
             .HasColumnType("NVARCHAR(50)")
             .IsRequired();
 
