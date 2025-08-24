@@ -1,5 +1,5 @@
 ﻿namespace Domain.Enums;
-public enum ReservationAction
+public enum enReservationAction
 {
     ReservationCreated = 1,
     ConvertedToNotified = 2,

@@ -1,6 +1,6 @@
 ﻿namespace Domain.Enums;
 
-public enum BookActionType
+public enum enBookActionType
 {
     OpenReservation = 1,
     CloseReservation = 2,

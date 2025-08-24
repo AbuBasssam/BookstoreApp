@@ -6,7 +6,7 @@ public class BorrowingAudit : IEntity<int>
 {
     public int Id { get; set; }
     public int BorrowingID { get; set; }
-    public BorrowAction Action { get; set; }
+    public enBorrowAction Action { get; set; }
     public int UserID { get; set; }
     public DateTime Timestamp { get; set; }
     public DateTime? OldDueDate { get; set; }

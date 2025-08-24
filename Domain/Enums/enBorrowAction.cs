@@ -1,6 +1,6 @@
 ﻿namespace Domain.Enums;
 
-public enum BorrowAction 
+public enum enBorrowAction 
 {
     BorrowCreated = 1,
     BorrowExtended = 2,

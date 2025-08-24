@@ -11,7 +11,7 @@ public class BookActivityLog : IEntity<int>
     public string? UpdatedFieldName { get; set; }
     public string? OldValue { get; set; }
     public string? NewValue { get; set; }
-    public BookActionType ActionType { get; set; }
+    public enBookActionType ActionType { get; set; }
     public DateTime ActionDate { get; set; }
     public int? ByUserID { get; set; }
 

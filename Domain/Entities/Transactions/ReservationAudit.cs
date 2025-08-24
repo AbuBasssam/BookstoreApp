@@ -6,7 +6,7 @@ public class ReservationAudit : IEntity<int>
 {
     public int Id { get; set; }
     public int ReservationID { get; set; }
-    public ReservationAction Action { get; set; }
+    public enReservationAction Action { get; set; }
     public int? BorrowingID { get; set; }
     public int? UserID { get; set; }
     public DateTime Timestamp { get; set; }
