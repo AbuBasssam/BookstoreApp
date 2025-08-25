@@ -13,7 +13,7 @@ public static class ViewsSeeder
     }
     private static string _GetBooksView()
     {
-        return @"CREATE VIEW vw_Books
+        return @"CREATE OR ALTER VIEW vw_Books
 AS
 SELECT
 	b.BookID,

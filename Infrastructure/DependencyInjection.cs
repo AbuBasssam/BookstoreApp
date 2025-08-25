@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 
 namespace Infrastructure;
@@ -26,6 +27,8 @@ public static class DependencyInjection
 
         // Register the custom authorization handlers
         AddHandlers(services);
+
+        RedisRegisteration(services, configuration);
 
 
         return services;
@@ -69,8 +72,8 @@ public static class DependencyInjection
 
         })
         .AddUserManager<UserManager<User>>()
-        .AddRoles<Role>()
-        .AddRoleManager<RoleManager<Role>>()
+        .AddRoles<Domain.Entities.Role>()
+        .AddRoleManager<RoleManager<Domain.Entities.Role>>()
         .AddEntityFrameworkStores<AppDbContext>();
     }
     private static void RepsitoriesRegisteration(IServiceCollection services)
@@ -91,5 +94,13 @@ public static class DependencyInjection
         // Add your custom authorization handlers here
         services.AddScoped<IAuthorizationHandler, VerificationOnlyHandler>();
         services.AddScoped<IAuthorizationHandler, ResetPasswordOnlyHandler>();
+    }
+    private static void RedisRegisteration(IServiceCollection services, IConfiguration configuration)
+    {
+        // Register Redis Cache
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
+        //services.AddScoped<ICacheService, RedisCacheService>();
+
     }
 }
