@@ -13,6 +13,7 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _GetBookReservableFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _GetBookBorrowableFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _GetBookRatingFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _SelectByLanguageFunction());
     }
     private static string _GetBookBorrowableFunction()
     {
@@ -71,6 +72,23 @@ RETURN
     FROM BookRatings br
     WHERE br.BookID = @BookID
     GROUP BY br.BookID
+);";
+    }
+    private static string _SelectByLanguageFunction()
+    {
+        return @"
+CREATE OR ALTER FUNCTION dbo.fn_SelectByLanguage( @LangCode NVARCHAR(2),
+    @ValueEN NVARCHAR(MAX),
+    @ValueAR NVARCHAR(MAX)
+)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT CASE 
+             WHEN @LangCode = 'ar' THEN @ValueAR 
+             ELSE @ValueEN 
+           END AS Value
 );";
     }
 }
