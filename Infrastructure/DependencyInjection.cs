@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Domain.Entities;
 using Implementations;
+using Infrastructure.Implementations;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
 using Interfaces;
@@ -100,7 +101,7 @@ public static class DependencyInjection
         // Register Redis Cache
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
-        //services.AddScoped<ICacheService, RedisCacheService>();
+        services.AddScoped<ICacheService, RedisCacheService>();
 
     }
 }
