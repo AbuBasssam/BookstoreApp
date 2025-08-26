@@ -16,6 +16,7 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _SelectByLanguageFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _NewestBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _MostRecentBooksFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _FirstCategoryBooksFunction());
     }
     private static string _GetBookBorrowableFunction()
     {
@@ -126,6 +127,24 @@ SELECT TOP @MostPopularBooksCount  bc.BookID
                 GROUP BY bc.BookID 
                 ORDER BY COUNT(*) DESC
     );";
+    }
+    private static string _FirstCategoryBooksFunction()
+    {
+        return @"
+CREATE OR ALTER FUNCTION dbo.fn_FirstCategoryBooks(@PageNumber INT,@PageSize INT)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT b.BookID, CAST(1 AS BIT) AS IsFirstCategory 
+    FROM Books b
+    WHERE b.IsActive = 1
+      AND b.CategoryID=1
+ORDER BY 
+        b.BookID DESC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY
+);";
     }
 
 }
