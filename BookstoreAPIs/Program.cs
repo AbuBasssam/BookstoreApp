@@ -87,6 +87,7 @@ using (var scope = app.Services.CreateScope())
     await SPAndFunctionsSeeder.SeedAsync(DbContext);
     await TriggerSeeder.SeedAsync(DbContext);
     await ViewsSeeder.SeedAsync(DbContext);
+    await BorrowingRecordSeeder.SeedAsync(DbContext);
 
 
 
