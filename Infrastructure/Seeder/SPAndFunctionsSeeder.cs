@@ -120,7 +120,7 @@ RETURNS TABLE
 AS
 RETURN
 (
-SELECT TOP @MostPopularBooksCount  bc.BookID 
+SELECT TOP (@MostPopularBooksCount)  bc.BookID 
                 FROM BorrowingRecords br INNER join BookCopies bc 
 				on br.BookCopyID=bc.CopyID
 				WHERE br.BorrowingDate >= DATEADD(DAY, -@PopularityDaysThreshold, GETDATE())
