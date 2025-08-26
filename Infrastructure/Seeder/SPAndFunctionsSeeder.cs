@@ -15,6 +15,7 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _GetBookRatingFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _SelectByLanguageFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _NewestBooksFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _MostRecentBooksFunction());
     }
     private static string _GetBookBorrowableFunction()
     {
@@ -110,4 +111,21 @@ ORDER BY
     FETCH NEXT @PageSize ROWS ONLY
 );";
     }
+    private static string _MostRecentBooksFunction()
+    {
+        return @"
+CREATE OR ALTER FUNCTION dbo.fn_MostRecentBooks( @PopularityDaysThreshold INT, @MostPopularBooksCount INT)
+RETURNS TABLE
+AS
+RETURN
+(
+SELECT TOP @MostPopularBooksCount  bc.BookID 
+                FROM BorrowingRecords br INNER join BookCopies bc 
+				on br.BookCopyID=bc.CopyID
+				WHERE br.BorrowingDate >= DATEADD(DAY, -@PopularityDaysThreshold, GETDATE())
+                GROUP BY bc.BookID 
+                ORDER BY COUNT(*) DESC
+    );";
+    }
+
 }
