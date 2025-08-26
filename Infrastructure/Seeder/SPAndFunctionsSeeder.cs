@@ -14,6 +14,7 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _GetBookBorrowableFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _GetBookRatingFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _SelectByLanguageFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _NewestBooksFunction());
     }
     private static string _GetBookBorrowableFunction()
     {
@@ -77,7 +78,7 @@ RETURN
     private static string _SelectByLanguageFunction()
     {
         return @"
-CREATE OR ALTER FUNCTION dbo.fn_SelectByLanguage( @LangCode NVARCHAR(2),
+CREATE OR ALTER FUNCTION dbo.fn_SelectByLanguage( @Lang NVARCHAR(2),
     @ValueEN NVARCHAR(MAX),
     @ValueAR NVARCHAR(MAX)
 )
@@ -86,9 +87,27 @@ AS
 RETURN
 (
     SELECT CASE 
-             WHEN @LangCode = 'ar' THEN @ValueAR 
+             WHEN @Lang = 'ar' THEN @ValueAR 
              ELSE @ValueEN 
            END AS Value
+);";
+    }
+    private static string _NewestBooksFunction()
+    {
+        return @"
+CREATE OR ALTER FUNCTION dbo.fn_NewestBooks( @NewBooksDaysThreshold INT,@PageNumber INT,@PageSize INT)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT b.BookID, CAST(1 AS BIT) AS IsNewBook 
+    FROM Books b
+    WHERE b.IsActive = 1
+      AND b.AvailabilityDate >= DATEADD(DAY, -@NewBooksDaysThreshold, GETDATE()) 
+ORDER BY 
+        b.AvailabilityDate DESC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY
 );";
     }
 }
