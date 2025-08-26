@@ -17,6 +17,7 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _NewestBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _MostRecentBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _FirstCategoryBooksFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _SP_GetHomePageData());
     }
     private static string _GetBookBorrowableFunction()
     {
@@ -145,6 +146,44 @@ ORDER BY
     OFFSET (@PageNumber - 1) * @PageSize ROWS
     FETCH NEXT @PageSize ROWS ONLY
 );";
+    }
+    private static string _SP_GetHomePageData()
+    {
+        return @"
+CREATE PROCEDURE SP_GetHomePageData
+@NewBooksDaysThreshold INT,
+@PopularityDaysThreshold INT,
+@PopularBooksCount INT,
+@Lang CHAR(2)
+AS
+BEGIN
+SET NOCOUNT ON;
+SELECT
+c.CategoryId,
+CASE WHEN @Lang='ar' THEN c.CategoryNameAR ELSE c.CategoryNameEN END AS CategoryName
+FROM Categories c 
+DECLARE @FirstCategoryId INT = (
+SELECT TOP 1 c.CategoryId
+FROM Categories c
+ORDER BY c.CategoryID
+);
+SELECT
+b.BookId,
+lang_title.Value AS Title,
+lang_author.Value AS AuthorName,
+b.CoverImage as CoverImageUrl,
+CASE WHEN b.CategoryID=1THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsFirstCategory ,
+CASE WHEN new_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsNewBook ,
+CASE WHEN recent_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsMostPopular
+FROM vw_Books b
+CROSS APPLY dbo.fn_SelectByLanguage(@Lang, b.TitleEN, b.TitleAR) lang_title
+CROSS APPLY dbo.fn_SelectByLanguage(@Lang, b.AuthorNameEN, b.AuthorNameAR) lang_author
+LEFT JOIN fn_NewestBooks(@NewBooksDaysThreshold,1,10) new_books ON b.BookID = new_books.BookID
+LEFT JOIN fn_MostRecentBooks(@PopularityDaysThreshold,@PopularBooksCount) recent_books ON b.BookID = recent_books.BookID
+LEFT JOIN fn_FirstCategoryBooks(1,10) first_category_books ON b.BookID = first_category_books.BookID
+Where b.IsActive=1 
+ORDER BY b.BookID
+END";
     }
 
 }
