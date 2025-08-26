@@ -154,13 +154,16 @@ CREATE PROCEDURE SP_GetHomePageData
 @NewBooksDaysThreshold INT,
 @PopularityDaysThreshold INT,
 @PopularBooksCount INT,
-@Lang CHAR(2)
+@FirstCategoryPageSize INT=10,
+@NewBooksPageSize INT=10
 AS
 BEGIN
 SET NOCOUNT ON;
+Declare @PageNumber INT=1
 SELECT
 c.CategoryId,
-CASE WHEN @Lang='ar' THEN c.CategoryNameAR ELSE c.CategoryNameEN END AS CategoryName
+c.CategoryNameEN,
+c.CategoryNameAR
 FROM Categories c 
 DECLARE @FirstCategoryId INT = (
 SELECT TOP 1 c.CategoryId
@@ -169,20 +172,45 @@ ORDER BY c.CategoryID
 );
 SELECT
 b.BookId,
-lang_title.Value AS Title,
-lang_author.Value AS AuthorName,
+b.TitleEN,
+b.TitleAR,
+b.AuthorNameEN,
+b.AuthorNameAR,
 b.CoverImage as CoverImageUrl,
 CASE WHEN b.CategoryID=1THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsFirstCategory ,
 CASE WHEN new_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsNewBook ,
 CASE WHEN recent_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsMostPopular
 FROM vw_Books b
-CROSS APPLY dbo.fn_SelectByLanguage(@Lang, b.TitleEN, b.TitleAR) lang_title
-CROSS APPLY dbo.fn_SelectByLanguage(@Lang, b.AuthorNameEN, b.AuthorNameAR) lang_author
-LEFT JOIN fn_NewestBooks(@NewBooksDaysThreshold,1,10) new_books ON b.BookID = new_books.BookID
+LEFT JOIN fn_NewestBooks(@NewBooksDaysThreshold,@PageNumber,@NewBooksPageSize) new_books ON b.BookID = new_books.BookID
 LEFT JOIN fn_MostRecentBooks(@PopularityDaysThreshold,@PopularBooksCount) recent_books ON b.BookID = recent_books.BookID
-LEFT JOIN fn_FirstCategoryBooks(1,10) first_category_books ON b.BookID = first_category_books.BookID
-Where b.IsActive=1 
-ORDER BY b.BookID
+LEFT JOIN fn_FirstCategoryBooks(@PageNumber,@FirstCategoryPageSize) first_category_books ON b.BookID = first_category_books.BookID
+Where b.IsActive=1
+AND (
+    b.CategoryID = 1 OR -- First Category
+    new_books.BookID IS NOT NULL OR -- New Books  
+    recent_books.BookID IS NOT NULL -- Popular Books
+)
+ORDER BY b.BookID;
+WITH FirstCategory AS
+(
+    SELECT COUNT(BookID) AS TotalFirstCategoryBooks
+    FROM Books
+    WHERE CategoryID = 1
+),
+NewBooks AS
+(
+    SELECT COUNT(BookID) AS TotalNewBooks
+    FROM Books b
+    WHERE b.IsActive = 1
+      AND b.AvailabilityDate >= DATEADD(DAY, -@NewBooksDaysThreshold, GETDATE()) 
+)
+SELECT 
+    f.TotalFirstCategoryBooks,
+    n.TotalNewBooks,
+    @FirstCategoryPageSize AS FirstCategoryPageSize,
+    @NewBooksPageSize AS NewBooksPageSize
+FROM FirstCategory f
+CROSS JOIN NewBooks n
 END";
     }
 
