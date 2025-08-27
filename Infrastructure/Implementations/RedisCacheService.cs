@@ -10,14 +10,12 @@ namespace Infrastructure.Implementations;
 /// </summary>
 public class RedisCacheService : ICacheService
 {
-    private readonly IDistributedCache _distributedCache;
     private readonly IDatabase _database;
     private readonly IConnectionMultiplexer _connectionMultiplexer;
     private readonly JsonSerializerSettings _jsonSettings;
 
     public RedisCacheService(IDistributedCache distributedCache, IConnectionMultiplexer connectionMultiplexer)
     {
-        _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
         _connectionMultiplexer = connectionMultiplexer ?? throw new ArgumentNullException(nameof(connectionMultiplexer));
         _database = _connectionMultiplexer.GetDatabase();
 
@@ -63,7 +61,9 @@ public class RedisCacheService : ICacheService
             if (string.IsNullOrWhiteSpace(key))
                 return null;
 
-            return await _distributedCache.GetStringAsync(key);
+            var cachedValue = await _database.StringGetAsync(key);
+            return cachedValue;
+
         }
         catch (Exception ex)
         {
@@ -105,8 +105,7 @@ public class RedisCacheService : ICacheService
             if (string.IsNullOrWhiteSpace(key) || value == null)
                 return;
 
-            var options = CreateDistributedCacheOptions(expiration);
-            await _distributedCache.SetStringAsync(key, value, options);
+            await _database.StringSetAsync(key, value, expiration);
 
             //_logger.LogDebug("Cached string value set for key: {Key}", key);
         }
@@ -126,7 +125,7 @@ public class RedisCacheService : ICacheService
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
-            await _distributedCache.RemoveAsync(key);
+            await _database.KeyDeleteAsync(key);
             //_logger.LogDebug("Cached value removed for key: {Key}", key);
         }
         catch (Exception ex)
@@ -277,18 +276,4 @@ public class RedisCacheService : ICacheService
         }
     }
 
-    /// <summary>
-    /// Creates DistributedCacheEntryOptions with expiration settings
-    /// </summary>
-    private static DistributedCacheEntryOptions CreateDistributedCacheOptions(TimeSpan? expiration)
-    {
-        var options = new DistributedCacheEntryOptions();
-
-        if (expiration.HasValue)
-        {
-            options.SetAbsoluteExpiration(expiration.Value);
-        }
-
-        return options;
-    }
 }
