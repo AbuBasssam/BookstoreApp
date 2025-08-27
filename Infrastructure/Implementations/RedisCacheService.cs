@@ -39,7 +39,7 @@ public class RedisCacheService : ICacheService
             if (string.IsNullOrWhiteSpace(key))
                 return null;
 
-            var cachedValue = await _distributedCache.GetStringAsync(key);
+            var cachedValue = await _database.StringGetAsync(key);
 
             if (string.IsNullOrWhiteSpace(cachedValue))
                 return null;
@@ -83,9 +83,9 @@ public class RedisCacheService : ICacheService
                 return;
 
             var serializedValue = JsonConvert.SerializeObject(value, _jsonSettings);
-            var options = CreateDistributedCacheOptions(expiration);
+            // var options = CreateDistributedCacheOptions(expiration);
 
-            await _distributedCache.SetStringAsync(key, serializedValue, options);
+            await _database.StringSetAsync(key, serializedValue, expiration);
 
             //_logger.LogDebug("Cached value set for key: {Key}", key);
         }

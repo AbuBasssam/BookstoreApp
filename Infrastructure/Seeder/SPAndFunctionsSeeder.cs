@@ -150,7 +150,7 @@ ORDER BY
     private static string _SP_GetHomePageData()
     {
         return @"
-CREATE PROCEDURE SP_GetHomePageData
+CREATE OR ALTER PROCEDURE SP_GetHomePageData
 @NewBooksDaysThreshold INT,
 @PopularityDaysThreshold INT,
 @PopularBooksCount INT,
