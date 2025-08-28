@@ -1,5 +1,6 @@
 ﻿using Application.Features.Home;
 using Application.Interfaces;
+using Domain.AppMetaData;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.HelperClasses;
@@ -15,7 +16,6 @@ public class HomePageDataSeeder
     private readonly ICacheService _cacheService;
     private readonly AppDbContext _dbContext;
     private readonly HomePageSettings _homePage;
-    private const string CacheKey = "HomePageData";
 
     public HomePageDataSeeder(ICacheService cacheService, AppDbContext dbContext, HomePageSettings homePage)
     {
@@ -26,6 +26,7 @@ public class HomePageDataSeeder
 
     public async Task SeedAsync()
     {
+        string CacheKey = CacheKeys.HomePageData;
         // 1. تحقق من وجود البيانات في الكاش
         var exists = await _cacheService.ExistsAsync(CacheKey);
         if (exists)
@@ -34,7 +35,7 @@ public class HomePageDataSeeder
             return;
         }
 
-        // 2. جلب البيانات من الـ Stored Procedure
+        // 2. get Data from  Stored Procedure
         //Log.Information("Fetching HomePageData from database...");
         var homePageData = await GetHomePageDataFromDbAsync();
 
@@ -65,7 +66,7 @@ public class HomePageDataSeeder
 
             // Add parameters
             command.Parameters.Add(new SqlParameter("@NewBooksDaysThreshold", _homePage.NewBooksDaysThreshold));
-            command.Parameters.Add(new SqlParameter("@PopularityDaysThreshold", _homePage.PopularityCalculationDays));
+            command.Parameters.Add(new SqlParameter("@PopularityDaysThreshold", _homePage.PopularityDaysThreshold));
             command.Parameters.Add(new SqlParameter("@PopularBooksCount", _homePage.MostPopularBooksCount));
 
 
@@ -89,10 +90,9 @@ public class HomePageDataSeeder
                 );
             }
             result.CategoriesData = categories;
-            // Move to next result set
+            // Move to Books result set
             if (await reader.NextResultAsync())
             {
-                // Process second result set (e.g., Books)
                 var books = new List<BookRedisDto>();
                 while (await reader.ReadAsync())
                 {
@@ -117,13 +117,12 @@ public class HomePageDataSeeder
                 result.pageData = books;
             }
 
-            // Move to next result set (if there are more)
+            // Move to page meta data result set
             if (await reader.NextResultAsync())
             {
                 var metaData = new HomePageMetaDto();
                 while (await reader.ReadAsync())
                 {
-                    // Process third result set
 
                     metaData.FirstCategoryPageSize = Convert.ToInt32((reader["FirstCategoryPageSize"]));
                     metaData.TotalFirstCategoryBooks = Convert.ToInt32((reader["TotalFirstCategoryBooks"]));
