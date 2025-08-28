@@ -52,6 +52,11 @@ public static class Router
         public const string Global = BASE + "/global";
         public const string Sensitive = "/" + BASE + "/sensitive";
     }
+    public class HomeRouter
+    {
+        public const string BASE = _rule + "/home";
+        public const string GetHomePageData = BASE + "/data";
+    }
 
 
 }
