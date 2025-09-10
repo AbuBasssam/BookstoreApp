@@ -57,6 +57,16 @@ public static class Router
         public const string BASE = _rule + "/home";
         public const string GetHomePageData = BASE + "/data";
     }
+    public class BookRouter
+    {
+        public const string BASE = _rule + "/books";
+        public const string GetByCategory = BASE + "/category/{categoryId}";
+        public const string Create = BASE;
+        public const string Update = BASE + "/{id}";
+        public const string Delete = BASE + "/{id}";
+
+
+    }
 
 
 }
