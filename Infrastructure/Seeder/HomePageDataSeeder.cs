@@ -135,6 +135,7 @@ public class HomePageDataSeeder
 
 
             }
+            result.LastUpdated = DateTime.UtcNow;
 
 
 
@@ -167,6 +168,7 @@ public class HomePageDataSeeder
         public List<Category> CategoriesData { get; set; }
         public List<BookRedisDto> pageData { get; set; }
         public HomePageMetaDto MetaData { get; set; }
+        public DateTime LastUpdated { get; set; }
 
     }
 
