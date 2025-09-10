@@ -1,5 +1,7 @@
 using Application;
+using Application.Interfaces;
 using Domain.Entities;
+using Domain.HelperClasses;
 using Infrastructure;
 using Infrastructure.Seeder;
 using Microsoft.AspNetCore.Identity;
@@ -75,6 +77,9 @@ using (var scope = app.Services.CreateScope())
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+    var homePageSettings = scope.ServiceProvider.GetRequiredService<HomePageSettings>();
+    var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
+
     var DbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await RoleSeeder.SeedAsync(roleManager);
     await UserSeeder.SeedAsync(userManager);
@@ -87,6 +92,11 @@ using (var scope = app.Services.CreateScope())
     await SPAndFunctionsSeeder.SeedAsync(DbContext);
     await TriggerSeeder.SeedAsync(DbContext);
     await ViewsSeeder.SeedAsync(DbContext);
+    await BorrowingRecordSeeder.SeedAsync(DbContext);
+    var homePageDataSeeder = new HomePageDataSeeder(cacheService, DbContext, homePageSettings);
+    await homePageDataSeeder.SeedAsync();
+
+
 
 
 

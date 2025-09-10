@@ -33,6 +33,8 @@ public static class DependencyInjection
 
         EmailSetting(services, configuration);
 
+        HomePageSetting(services, configuration);
+
         FluentValidatorConfiguration(services);
 
         // add authorization policies
@@ -152,6 +154,17 @@ public static class DependencyInjection
         configuration.GetSection(nameof(EmailSettings)).Bind(EmailSetting);
 
         services.AddSingleton(EmailSetting);
+    }
+    private static void HomePageSetting(IServiceCollection services, IConfiguration configuration)
+    {
+        var homePageSetting = configuration.GetSection("HomePageSettings");
+        services.Configure<HomePageSettings>(homePageSetting);
+
+        var Setting = new HomePageSettings();
+
+        configuration.GetSection(nameof(HomePageSettings)).Bind(Setting);
+
+        services.AddSingleton(Setting);
     }
 
     private static void _getMediatRServiceConfiguration(MediatRServiceConfiguration config)

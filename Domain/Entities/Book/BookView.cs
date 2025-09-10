@@ -9,11 +9,14 @@ public class BookView : IEntity<int>
     public string DescriptionEN { get; set; } = null!;
     public string DescriptionAR { get; set; } = null!;
     public string PublisherNameEN { get; set; } = null!;
+    public int PublisherID { get; set; }
     public string PublisherNameAR { get; set; } = null!;
+    public int AuthorID { get; set; }
     public string AuthorNameEN { get; set; } = null!;
     public string AuthorNameAR { get; set; } = null!;
     public string LanguageEN { get; set; } = null!;
     public string LanguageAR { get; set; } = null!;
+    public int CategoryID { get; set; }
     public string CategoryNameEN { get; set; } = null!;
     public string CategoryNameAR { get; set; } = null!;
     public short PageCount { get; set; }

@@ -15,4 +15,13 @@ public static class HttpContextExtensions
     {
         return context.Connection.RemoteIpAddress?.ToString();
     }
+    //get language from request header
+    public static string GetRequestLanguage(this HttpContext context)
+    {
+        var lang = context.Request.Headers["Accept-Language"].FirstOrDefault();
+        if (string.IsNullOrEmpty(lang))
+            return "en"; // default language
+        return lang.Split(',').FirstOrDefault()?.Trim().ToLower() ?? "en";
+    }
+
 }
