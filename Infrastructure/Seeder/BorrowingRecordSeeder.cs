@@ -11,6 +11,8 @@ public class BorrowingRecordSeeder
     {
         if (await context.BorrowingRecords.AnyAsync())
             return;
+        await context.Database.ExecuteSqlRawAsync("DISABLE TRIGGER ALL ON BorrowingRecords");
+
 
         var admins = await context.Users.Where(u => u.RoleID == 1).Select(u => u.Id).ToListAsync();
         var members = await context.Users.Where(u => u.RoleID == 2).Select(u => u.Id).ToListAsync();
