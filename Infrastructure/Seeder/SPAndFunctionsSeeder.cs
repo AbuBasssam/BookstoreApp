@@ -18,6 +18,7 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _MostRecentBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _FirstCategoryBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _SP_GetHomePageData());
+        await SeederHelper.ExecuteSqlAsync(connection, _SP_GetPagedBooksByCategory());
     }
     private static string _GetBookBorrowableFunction()
     {
@@ -211,6 +212,54 @@ SELECT
     @NewBooksPageSize AS NewBooksPageSize
 FROM FirstCategory f
 CROSS JOIN NewBooks n
+END";
+    }
+    private static string _SP_GetPagedBooksByCategory()
+    {
+        return @"
+CREATE OR ALTER PROCEDURE SP_GetPagedBooksByCategory
+@CategoryID INT,
+	@PageNumber INT,
+	@PageSize INT,
+	@LangCode CHAR(2),
+	@NewBookDateThreshold DATE
+AS
+BEGIN
+	
+	SET NOCOUNT ON;
+	With New_Books 
+	as(
+		SELECT b.BookID, CAST(1 AS BIT) AS IsNewBook 
+		FROM vw_Books b
+		WHERE b.IsActive = 1
+		  AND b.AvailabilityDate >= DATEADD(DAY, -30, @NewBookDateThreshold)
+	   )
+	Select
+	b.BookId,
+	Title.Value AS Title,
+	Author.Value AS Author,
+	b.CoverImage as CoverImageUrl,
+	CASE WHEN new_books.BookID IS NOT NULL
+		THEN CAST(1 AS BIT)
+		ELSE CAST(0 AS BIT) END AS IsNewBook 
+
+
+    FROM vw_Books b
+	LEFT JOIN New_Books  ON b.BookID = new_books.BookID
+	CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.TitleEN, b.TitleAR) Title
+	CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.AuthorNameEN, b.AuthorNameAR) Author
+
+	Where b.IsActive=1 AND b.CategoryID=@CategoryID
+	Order By b.BookID
+	
+	OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+	With TotalCount as
+	(
+		Select Count(BookId) as BookCount from vw_Books
+		where CategoryID=@CategoryID 
+	)
+	Select BookCount as TotalCount, CEILING(1.0 * BookCount / @PageSize) AS TotalPages From TotalCount
 END";
     }
 
