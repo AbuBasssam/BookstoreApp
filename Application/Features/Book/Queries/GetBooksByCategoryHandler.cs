@@ -22,11 +22,12 @@ public class GetBooksByCategoryHandler : IRequestHandler<GetBooksByCategoryQuery
     public async Task<Response<PagedResult<CategoryBookDto>>> Handle(GetBooksByCategoryQuery request, CancellationToken cancellationToken)
     {
         var cachedData = await _cacheService.GetAsync<HomePageRedisDto>(CacheKeys.HomePageData);
+        DateOnly NewBookDateThreshold = DateOnly.Parse(cachedData!.LastUpdated.Date.ToShortDateString());
 
         (ICollection<CategoryBookDto> books, PagingMetadata metaData) = await _bookRepo
             .GetHomeBookPageDataByCategory
             (
-                DateOnly.Parse(cachedData!.LastUpdated.Date.ToString()),
+                NewBookDateThreshold,
                 request.categoryId,
                 request.pageNumber,
                 request.pageSize,
