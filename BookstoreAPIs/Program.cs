@@ -81,6 +81,9 @@ using (var scope = app.Services.CreateScope())
     var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
     var DbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await SPAndFunctionsSeeder.SeedAsync(DbContext);
+    await TriggerSeeder.SeedAsync(DbContext);
+    await ViewsSeeder.SeedAsync(DbContext);
     await RoleSeeder.SeedAsync(roleManager);
     await UserSeeder.SeedAsync(userManager);
     await SystemSettingsSeeder.SeedAsync(DbContext);
@@ -89,16 +92,10 @@ using (var scope = app.Services.CreateScope())
     await PublisherSeeder.SeedAsync(DbContext);
     await AuthorSeeder.SeedAsync(DbContext);
     await BookSeeder.SeedAsync(DbContext);
-    await SPAndFunctionsSeeder.SeedAsync(DbContext);
-    await TriggerSeeder.SeedAsync(DbContext);
-    await ViewsSeeder.SeedAsync(DbContext);
     await BorrowingRecordSeeder.SeedAsync(DbContext);
+
     var homePageDataSeeder = new HomePageDataSeeder(cacheService, DbContext, homePageSettings);
     await homePageDataSeeder.SeedAsync();
-
-
-
-
 
 }
 

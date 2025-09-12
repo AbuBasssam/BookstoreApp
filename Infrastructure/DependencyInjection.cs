@@ -88,6 +88,8 @@ public static class DependencyInjection
 
         services.AddScoped<IOtpRepsitory, OtpRepository>();
 
+        services.AddScoped<IBookRepository, BookRepository>();
+
 
     }
     private static void AddHandlers(IServiceCollection services)

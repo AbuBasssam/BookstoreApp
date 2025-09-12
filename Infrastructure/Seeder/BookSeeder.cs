@@ -10,7 +10,10 @@ public class BookSeeder
     {
         if (await context.Books.AnyAsync())
             return;
-
+        // Disable triggers temporarily
+        await context.Database.ExecuteSqlRawAsync("DISABLE TRIGGER ALL ON BookCopies");
+        await context.Database.ExecuteSqlRawAsync("DISABLE TRIGGER ALL ON Books");
+        await context.Database.ExecuteSqlRawAsync("DISABLE TRIGGER ALL ON BookRatings");
         var languages = await context.Languages.Select(l => l.Id).ToListAsync();
         var categories = await context.Categories.Select(c => c.Id).ToListAsync();
         var publishers = await context.Publishers.Select(p => p.Id).ToListAsync();
