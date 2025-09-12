@@ -10,7 +10,7 @@ namespace Presentation.Controller;
 
 public class HomePageController : ApiController
 {
-    [HttpGet(Router.HomeRouter.GetHomePageData)]
+    [HttpGet(Router.HomeRouter.BASE)]
     public async Task<IActionResult> GetHomePageData()
     {
         var langCode = HttpContext.GetRequestLanguage();
