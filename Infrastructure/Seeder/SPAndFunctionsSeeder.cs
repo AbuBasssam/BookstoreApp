@@ -17,8 +17,10 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _NewestBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _MostRecentBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _FirstCategoryBooksFunction());
+
         await SeederHelper.ExecuteSqlAsync(connection, _SP_GetHomePageData());
         await SeederHelper.ExecuteSqlAsync(connection, _SP_GetPagedBooksByCategory());
+        await SeederHelper.ExecuteSqlAsync(connection, _Sp_GetPagedNewestBooks());
     }
     private static string _GetBookBorrowableFunction()
     {
@@ -99,19 +101,15 @@ RETURN
     private static string _NewestBooksFunction()
     {
         return @"
-CREATE OR ALTER FUNCTION dbo.fn_NewestBooks( @NewBooksDaysThreshold INT,@PageNumber INT,@PageSize INT)
+CREATE OR ALTER FUNCTION dbo.fn_NewestBooks( @NewBooksDateThreshold DATE, @NewBooksDaysThreshold INT)
 RETURNS TABLE
 AS
 RETURN
 (
-    SELECT b.BookID, CAST(1 AS BIT) AS IsNewBook 
+    SELECT b.BookID,b.AvailabilityDate
     FROM Books b
-    WHERE b.IsActive = 1
-      AND b.AvailabilityDate >= DATEADD(DAY, -@NewBooksDaysThreshold, GETDATE()) 
-ORDER BY 
-        b.AvailabilityDate DESC
-    OFFSET (@PageNumber - 1) * @PageSize ROWS
-    FETCH NEXT @PageSize ROWS ONLY
+    WHERE b.IsActive = 1 AND
+	b.AvailabilityDate >= DATEADD(DAY, -@NewBooksDaysThreshold, @NewBooksDateThreshold)
 );";
     }
     private static string _MostRecentBooksFunction()
@@ -160,17 +158,29 @@ CREATE OR ALTER PROCEDURE SP_GetHomePageData
 AS
 BEGIN
 SET NOCOUNT ON;
-Declare @PageNumber INT=1
+DECLARE @PageNumber INT=1
+
 SELECT
 c.CategoryId,
 c.CategoryNameEN,
 c.CategoryNameAR
 FROM Categories c 
+
 DECLARE @FirstCategoryId INT = (
 SELECT TOP 1 c.CategoryId
 FROM Categories c
 ORDER BY c.CategoryID
 );
+
+DECLARE @NewestPage TABLE(BookID INT PRIMARY KEY);
+
+INSERT INTO @NewestPage (BookID)
+SELECT BookID
+FROM fn_NewestBooks(GETDATE(), @NewBooksDaysThreshold)NB
+Order By NB.AvailabilityDate DESC
+OFFSET (@PageNumber - 1) * @NewBooksPageSize ROWS
+FETCH NEXT @NewBooksPageSize ROWS ONLY;
+
 SELECT
 b.BookId,
 b.TitleEN,
@@ -182,7 +192,7 @@ CASE WHEN b.CategoryID=1THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsFirstCa
 CASE WHEN new_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsNewBook ,
 CASE WHEN recent_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsMostPopular
 FROM vw_Books b
-LEFT JOIN fn_NewestBooks(@NewBooksDaysThreshold,@PageNumber,@NewBooksPageSize) new_books ON b.BookID = new_books.BookID
+LEFT JOIN @NewestPage  new_books ON b.BookID = new_books.BookID
 LEFT JOIN fn_MostRecentBooks(@PopularityDaysThreshold,@PopularBooksCount) recent_books ON b.BookID = recent_books.BookID
 LEFT JOIN fn_FirstCategoryBooks(@PageNumber,@FirstCategoryPageSize) first_category_books ON b.BookID = first_category_books.BookID
 Where b.IsActive=1
@@ -192,33 +202,35 @@ AND (
     recent_books.BookID IS NOT NULL -- Popular Books
 )
 ORDER BY b.BookID;
-WITH FirstCategory AS
+WITH fc_BookCounts AS
 (
     SELECT COUNT(BookID) AS TotalFirstCategoryBooks
     FROM Books
-    WHERE CategoryID = 1
-),
+    WHERE CategoryID = @FirstCategoryId
+)
+,
 NewBooks AS
 (
     SELECT COUNT(BookID) AS TotalNewBooks
-    FROM Books b
-    WHERE b.IsActive = 1
-      AND b.AvailabilityDate >= DATEADD(DAY, -@NewBooksDaysThreshold, GETDATE()) 
+    FROM 
+	fn_NewestBooks(GETDATE(),@NewBooksDaysThreshold)
+	
 )
 SELECT 
     f.TotalFirstCategoryBooks,
     n.TotalNewBooks,
     @FirstCategoryPageSize AS FirstCategoryPageSize,
     @NewBooksPageSize AS NewBooksPageSize
-FROM FirstCategory f
+FROM fc_BookCounts f
 CROSS JOIN NewBooks n
+
 END";
     }
     private static string _SP_GetPagedBooksByCategory()
     {
         return @"
 CREATE OR ALTER PROCEDURE SP_GetPagedBooksByCategory
-@CategoryID INT,
+    @CategoryID INT,
 	@PageNumber INT,
 	@PageSize INT,
 	@LangCode CHAR(2),
@@ -227,40 +239,89 @@ AS
 BEGIN
 	
 	SET NOCOUNT ON;
-	With New_Books 
-	as(
-		SELECT b.BookID, CAST(1 AS BIT) AS IsNewBook 
-		FROM vw_Books b
-		WHERE b.IsActive = 1
-		  AND b.AvailabilityDate >= DATEADD(DAY, -30, @NewBookDateThreshold)
-	   )
-	Select
-	b.BookId,
-	Title.Value AS Title,
-	Author.Value AS Author,
-	b.CoverImage as CoverImageUrl,
-	CASE WHEN new_books.BookID IS NOT NULL
-		THEN CAST(1 AS BIT)
-		ELSE CAST(0 AS BIT) END AS IsNewBook 
+	DECLARE @Newest TABLE(BookID INT PRIMARY KEY);
 
-
-    FROM vw_Books b
-	LEFT JOIN New_Books  ON b.BookID = new_books.BookID
-	CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.TitleEN, b.TitleAR) Title
-	CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.AuthorNameEN, b.AuthorNameAR) Author
-
-	Where b.IsActive=1 AND b.CategoryID=@CategoryID
-	Order By b.BookID
+	INSERT INTO @Newest (BookID)
+	SELECT BookID
+	FROM fn_NewestBooks(GETDATE(), 30)new_books
+	Order By new_books.AvailabilityDate DESC
 	
-	OFFSET (@PageNumber - 1) * @PageSize ROWS
-    FETCH NEXT @PageSize ROWS ONLY;
+		Select
+		b.BookId,
+		Title.Value AS Title,
+		Author.Value AS Author,
+		b.CoverImage as CoverImageUrl,
+		CASE WHEN new_books.BookID IS NOT NULL
+			THEN CAST(1 AS BIT)
+			ELSE CAST(0 AS BIT) END AS IsNewBook 
+	
+	    FROM vw_Books b
+		LEFT JOIN @Newest new_books  ON b.BookID = new_books.BookID
+		CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.TitleEN, b.TitleAR) Title
+		CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.AuthorNameEN, b.AuthorNameAR) Author
+	
+		Where b.IsActive=1 AND b.CategoryID=@CategoryID
+		Order By b.BookID
+	
+		OFFSET (@PageNumber - 1) * @PageSize ROWS
+	    FETCH NEXT @PageSize ROWS ONLY;
+		
 	With TotalCount as
 	(
 		Select Count(BookId) as BookCount from vw_Books
 		where CategoryID=@CategoryID 
 	)
-	Select BookCount as TotalCount, CEILING(1.0 * BookCount / @PageSize) AS TotalPages From TotalCount
-END";
+	Select 
+		BookCount as TotalCount,
+		CEILING(1.0 * BookCount / @PageSize) AS TotalPages
+	From TotalCount
+	
+	END";
+    }
+    private static string _Sp_GetPagedNewestBooks()
+    {
+        return @"
+CREATE OR ALTER PROCEDURE SP_GetPagedNewestBooks
+     @PageNumber INT,
+    @PageSize INT,
+	@LangCode CHAR(2)='en',
+    @NewBooksDateThreshold DATETIME = NULL,
+    @NewBooksDaysThreshold INT = 30
+
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SET @NewBooksDateThreshold = ISNULL(@NewBooksDateThreshold, GETDATE());
+	 DECLARE @Newest TABLE
+    (
+        BookID INT PRIMARY KEY
+    );
+	INSERT INTO @Newest (BookID)
+    SELECT nb.BookID
+    FROM dbo.fn_NewestBooks(@NewBooksDateThreshold, @NewBooksDaysThreshold) nb;
+
+    SELECT 
+        b.BookId,
+        Title.Value AS Title,
+        Author.Value AS Author,
+        b.CoverImage AS CoverImageUrl,
+		CASE WHEN nb.BookID IS NOT NULL
+			THEN CAST(1 AS BIT)
+			ELSE CAST(0 AS BIT) END AS IsNewBook 
+    FROM dbo.vw_Books b 
+    Left JOIN @Newest nb  ON nb.BookID = b.BookID
+    CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.TitleEN, b.TitleAR) Title
+    CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.AuthorNameEN, b.AuthorNameAR) Author
+    ORDER BY b.AvailabilityDate DESC
+	OFFSET (@PageNumber - 1) * @PageSize ROWS
+	FETCH NEXT @PageSize ROWS ONLY;
+
+	 SELECT 
+        COUNT(BookId) AS TotalCount, 
+        CEILING(1.0 * COUNT(BookId) / @PageSize) AS TotalPages
+    FROM @Newest;
+END;";
     }
 
 }

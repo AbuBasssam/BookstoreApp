@@ -1,6 +1,6 @@
 ﻿namespace Application.Features.Book;
 
-public class CategoryBookDto
+public class BookDto
 {
     public int BookId { get; set; }
     public string Title { get; set; }

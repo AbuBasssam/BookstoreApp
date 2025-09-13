@@ -3,7 +3,7 @@ using Domain.Enums;
 using MediatR;
 
 namespace Application.Features.Book;
-public class GetBooksByCategoryQuery : IRequest<Response<PagedResult<CategoryBookDto>>>
+public class GetBooksByCategoryQuery : IRequest<Response<PagedResult<BookDto>>>
 {
     public enCategory categoryId { get; set; }
     public int pageSize { get; set; }

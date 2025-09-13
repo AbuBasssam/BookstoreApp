@@ -6,7 +6,7 @@ using MediatR;
 
 namespace Application.Features.Book;
 
-public class GetBooksByCategoryHandler : IRequestHandler<GetBooksByCategoryQuery, Response<PagedResult<CategoryBookDto>>>
+public class GetBooksByCategoryHandler : IRequestHandler<GetBooksByCategoryQuery, Response<PagedResult<BookDto>>>
 {
     private readonly IBookRepository _bookRepo;
     private readonly ICacheService _cacheService;
@@ -19,13 +19,13 @@ public class GetBooksByCategoryHandler : IRequestHandler<GetBooksByCategoryQuery
         _cacheService = cacheService;
     }
 
-    public async Task<Response<PagedResult<CategoryBookDto>>> Handle(GetBooksByCategoryQuery request, CancellationToken cancellationToken)
+    public async Task<Response<PagedResult<BookDto>>> Handle(GetBooksByCategoryQuery request, CancellationToken cancellationToken)
     {
         var cachedData = await _cacheService.GetAsync<HomePageRedisDto>(CacheKeys.HomePageData);
         DateOnly NewBookDateThreshold = DateOnly.Parse(cachedData!.LastUpdated.Date.ToShortDateString());
 
-        (ICollection<CategoryBookDto> books, PagingMetadata metaData) = await _bookRepo
-            .GetHomeBookPageDataByCategory
+        (ICollection<BookDto> books, PagingMetadata metaData) = await _bookRepo
+            .GetHomePageBookByCategoryPageAsync
             (
                 NewBookDateThreshold,
                 request.categoryId,
@@ -33,7 +33,7 @@ public class GetBooksByCategoryHandler : IRequestHandler<GetBooksByCategoryQuery
                 request.pageSize,
                 request.lang
             );
-        var reslut = PagedResult<CategoryBookDto>.Create(books.ToList(), metaData.TotalCount, request.pageNumber, request.pageSize);
+        var reslut = PagedResult<BookDto>.Create(books.ToList(), metaData.TotalCount, request.pageNumber, request.pageSize);
         reslut.TotalPages = metaData.TotalPages;
         return _responseHandler.Success(reslut);
 
