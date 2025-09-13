@@ -28,12 +28,12 @@ public class GetBooksByCategoryHandler : IRequestHandler<GetBooksByCategoryQuery
             .GetHomePageBookByCategoryPageAsync
             (
                 NewBookDateThreshold,
-                request.categoryId,
-                request.pageNumber,
-                request.pageSize,
-                request.lang
+                request.CategoryID,
+                request.PageNumber,
+                request.PageSize,
+                request.Lang
             );
-        var reslut = PagedResult<BookDto>.Create(books.ToList(), metaData.TotalCount, request.pageNumber, request.pageSize);
+        var reslut = PagedResult<BookDto>.Create(books.ToList(), metaData.TotalCount, request.PageNumber, request.PageSize);
         reslut.TotalPages = metaData.TotalPages;
         return _responseHandler.Success(reslut);
 

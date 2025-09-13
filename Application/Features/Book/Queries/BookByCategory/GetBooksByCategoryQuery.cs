@@ -3,19 +3,15 @@ using Domain.Enums;
 using MediatR;
 
 namespace Application.Features.Book;
-public class GetBooksByCategoryQuery : IRequest<Response<PagedResult<BookDto>>>
+public class GetBooksByCategoryQuery : LocalizePaginationInfo, IRequest<Response<PagedResult<BookDto>>>
 {
-    public enCategory categoryId { get; set; }
-    public int pageSize { get; set; }
-    public int pageNumber { get; set; }
+    public enCategory CategoryID { get; set; }
 
-    public string lang { get; set; }
-
-    public GetBooksByCategoryQuery(enCategory categoryId, string lang = "en", int pageNumber = 1, int pageSize = 10)
+    public GetBooksByCategoryQuery(enCategory categoryId, int pageNumber = 1, int pageSize = 10, string lang = "en")
     {
-        this.categoryId = categoryId;
-        this.pageNumber = pageNumber;
-        this.pageSize = pageSize;
-        this.lang = lang;
+        this.CategoryID = categoryId;
+        this.PageNumber = pageNumber;
+        this.PageSize = pageSize;
+        this.Lang = lang;
     }
 }
