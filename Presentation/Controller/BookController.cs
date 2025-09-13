@@ -15,7 +15,7 @@ public class BookController : ApiController
     public async Task<IActionResult> GetBooksByCategory(enCategory categoryId, int pageNumber = 1, int pageSize = 10)
     {
         var langCode = HttpContext.GetRequestLanguage().ToLower();
-        var queyr = new GetBooksByCategoryQuery(categoryId, langCode.Equals("ar") ? "ar" : "en", pageNumber, pageSize);
+        var queyr = new GetBooksByCategoryQuery(categoryId);
         return await QueryExecutor.Execute(
             queyr,
             Sender,
