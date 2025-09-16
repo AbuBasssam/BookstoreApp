@@ -14,7 +14,8 @@ public class HomePageController : ApiController
     public async Task<IActionResult> GetHomePageData()
     {
         var langCode = HttpContext.GetRequestLanguage();
-        var queyr = new GetHomePageDataQuery(langCode);
+        var token = HttpContext.GetAuthToken();
+        var queyr = new GetHomePageDataQuery(token!, langCode);
         return await QueryExecutor.Execute(
             queyr,
             Sender,

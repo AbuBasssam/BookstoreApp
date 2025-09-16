@@ -1,2 +1,2 @@
 ﻿namespace Application.Features.Home;
-public record HomePageResponseDto(List<CategoryDto> Categories, List<HomePageBookDto> Books);
+public record HomePageResponseDto(int notificationCount, List<CategoryDto> Categories, List<HomePageBookDto> Books);
