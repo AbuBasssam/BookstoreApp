@@ -63,16 +63,9 @@ public class GetHomePageDataQueryHandler : IRequestHandler<GetHomePageDataQuery,
 
 
         var responseDto = new HomePageResponseDto(notificationsCount, categories, books);
-        return _responseHandler.Success<HomePageResponseDto>(responseDto, cachedData.MetaData);
+        return _responseHandler.Success(responseDto, cachedData.MetaData);
 
-        return new Response<HomePageResponseDto>
-        {
-            Succeeded = true,
-            StatusCode = HttpStatusCode.OK,
-            Data = responseDto,
-            Meta = _MapMeta(cachedData.MetaData),
-            Message = "Homepage data retrieved successfully"
-        };
+
     }
     private List<CategoryDto> _MapCategories(List<Category> categories, string language)
     {
