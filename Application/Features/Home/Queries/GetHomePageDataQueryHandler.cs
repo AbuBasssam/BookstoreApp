@@ -4,6 +4,7 @@ using Domain.AppMetaData;
 using Domain.Entities;
 using Domain.HelperClasses;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace Application.Features.Home;
@@ -11,12 +12,19 @@ namespace Application.Features.Home;
 public class GetHomePageDataQueryHandler : IRequestHandler<GetHomePageDataQuery, Response<HomePageResponseDto>>
 {
     private readonly ICacheService _cacheService;
+    private readonly IAuthService _authServices;
+    private readonly IGenericRepository<Notification, int> _notificationRepository;
     private readonly ResponseHandler _responseHandler;
 
-    public GetHomePageDataQueryHandler(ICacheService cacheService, HomePageSettings settings, ResponseHandler responseHandler)
+
+
+    public GetHomePageDataQueryHandler(ICacheService cacheService, HomePageSettings settings, ResponseHandler responseHandler,
+        IAuthService authServices, IGenericRepository<Notification, int> notificationRepository)
     {
         _cacheService = cacheService;
         _responseHandler = responseHandler;
+        _authServices = authServices;
+        _notificationRepository = notificationRepository;
     }
 
     public async Task<Response<HomePageResponseDto>> Handle(GetHomePageDataQuery request, CancellationToken cancellationToken)
@@ -39,7 +47,22 @@ public class GetHomePageDataQueryHandler : IRequestHandler<GetHomePageDataQuery,
         var categories = _MapCategories(cachedData.CategoriesData, request.langCode.ToLower());
         var books = _MapBooks(cachedData.PageData, request.langCode.ToLower());
 
-        var responseDto = new HomePageResponseDto(categories, books);
+        /*//Validate token and get user ID
+        (JwtSecurityToken obj, Exception ex) = _authServices.GetJwtAccessTokenObjFromAccessTokenString(request.token);
+        if (ex != null)
+        {
+            return _responseHandler.BadRequest<HomePageResponseDto>(ex.Message);
+        }
+        (int userId, Exception e) = _authServices.GetUserIdFromJwtAccessTokenObj(obj!);
+        if (e != null)
+        {
+            return _responseHandler.BadRequest<HomePageResponseDto>(e.Message);
+        }*/
+
+        int notificationsCount = await _notificationRepository.GetTableNoTracking().CountAsync(n => n.UserDevice.UserId == 2 && !n.IsRead);
+
+
+        var responseDto = new HomePageResponseDto(notificationsCount, categories, books);
         return _responseHandler.Success<HomePageResponseDto>(responseDto, cachedData.MetaData);
 
         return new Response<HomePageResponseDto>
