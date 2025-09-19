@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace Infrastructure.Seeder;
 
@@ -68,7 +69,8 @@ public class BookSeeder
                 Location = loc,
                 LastOpenBookingsDate = null,
                 IsDeleted = false,
-                CoverImageUrl = $"https://10.0.2.2:7178/image/{titleEN.Replace(" ", "")}.jpg"
+                CoverImageUrl = $"https://10.0.2.2:7178/image/{SanitizeTitle(titleEN)}.jpg"
+
             });
         }
         // Romance (15)
@@ -305,7 +307,10 @@ public class BookSeeder
         var baseNum = 9780000000000L + seed * 111;
         return baseNum.ToString();
     }
-
+    private static string SanitizeTitle(string title)
+    {
+        return Regex.Replace(title, @"[\s,:;.!?()]+", "-").ToLower();
+    }
     private class BookSeedInfo
     {
         public int Id;
