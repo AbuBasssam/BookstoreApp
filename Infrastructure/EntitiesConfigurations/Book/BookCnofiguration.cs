@@ -25,9 +25,9 @@ public class BookCnofiguration : IEntityTypeConfiguration<Book>
 
         builder.Property(b => b.Id).HasColumnName("BookID").ValueGeneratedOnAdd();
 
-        builder.Property(b => b.TitleEN).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+        builder.Property(b => b.TitleEN).HasColumnType("nvarchar").IsRequired().HasMaxLength(100);
 
-        builder.Property(b => b.TitleAR).HasColumnType("nvarchar").IsRequired().HasMaxLength(50);
+        builder.Property(b => b.TitleAR).HasColumnType("nvarchar").IsRequired().HasMaxLength(100);
 
         builder.Property(b => b.PublishDate).IsRequired();
 
