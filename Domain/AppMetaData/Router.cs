@@ -60,7 +60,7 @@ public static class Router
     public class BookRouter
     {
         public const string BASE = _rule + "/books";
-        public const string ByCategory = BASE + "/category/{categoryId}";
+        public const string ByCategory = BASE + "/category/{id}";
         public const string Create = BASE;
         public const string Update = BASE + "/{id}";
         public const string Delete = BASE + "/{id}";
