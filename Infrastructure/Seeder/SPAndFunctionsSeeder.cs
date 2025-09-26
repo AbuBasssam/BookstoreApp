@@ -141,7 +141,7 @@ RETURN
     WHERE b.IsActive = 1
       AND b.CategoryID=1
 ORDER BY 
-        b.BookID DESC
+        b.BookID 
     OFFSET (@PageNumber - 1) * @PageSize ROWS
     FETCH NEXT @PageSize ROWS ONLY
 );";
@@ -172,36 +172,47 @@ FROM Categories c
 ORDER BY c.CategoryID
 );
 
-DECLARE @NewestPage TABLE(BookID INT PRIMARY KEY);
+DECLARE @NewestBooks TABLE(BookID INT PRIMARY KEY);
 
-INSERT INTO @NewestPage (BookID)
+INSERT INTO @NewestBooks (BookID)
 SELECT BookID
 FROM fn_NewestBooks(GETDATE(), @NewBooksDaysThreshold)NB
-Order By NB.AvailabilityDate DESC
-OFFSET (@PageNumber - 1) * @NewBooksPageSize ROWS
-FETCH NEXT @NewBooksPageSize ROWS ONLY;
+Order By NB.AvailabilityDate DESC;
 
-SELECT
-b.BookId,
-b.TitleEN,
-b.TitleAR,
-b.AuthorNameEN,
-b.AuthorNameAR,
-b.CoverImage as CoverImageUrl,
-CASE WHEN b.CategoryID=1THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsFirstCategory ,
-CASE WHEN new_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsNewBook ,
-CASE WHEN recent_books.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsMostPopular
-FROM vw_Books b
-LEFT JOIN @NewestPage  new_books ON b.BookID = new_books.BookID
-LEFT JOIN fn_MostRecentBooks(@PopularityDaysThreshold,@PopularBooksCount) recent_books ON b.BookID = recent_books.BookID
-LEFT JOIN fn_FirstCategoryBooks(@PageNumber,@FirstCategoryPageSize) first_category_books ON b.BookID = first_category_books.BookID
-Where b.IsActive=1
-AND (
-    b.CategoryID = 1 OR -- First Category
-    new_books.BookID IS NOT NULL OR -- New Books  
-    recent_books.BookID IS NOT NULL -- Popular Books
+WITH FirstCategory AS (
+    SELECT TOP (@FirstCategoryPageSize) b.BookId
+    FROM vw_Books b
+    WHERE b.IsActive = 1 AND b.CategoryID = 1
+    ORDER BY b.BookId
+),
+Newest AS (
+    SELECT TOP (@NewBooksPageSize) nb.BookId
+    FROM  @NewestBooks nb
+
+),
+Popular AS (
+    SELECT BookId
+    FROM fn_MostRecentBooks(@PopularityDaysThreshold,@PopularBooksCount)
 )
-ORDER BY b.BookID;
+SELECT 
+    b.BookId,
+    b.TitleEN,
+    b.TitleAR,
+    b.AuthorNameEN,
+    b.AuthorNameAR,
+    b.CoverImage as CoverImageUrl,
+    CASE WHEN fc.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsFirstCategory,
+    CASE WHEN nb.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsNewBook,
+    CASE WHEN pb.BookID IS NOT NULL THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS IsMostPopular
+FROM vw_Books b
+LEFT JOIN FirstCategory fc ON b.BookId = fc.BookId
+LEFT JOIN Newest nb ON b.BookId = nb.BookId
+LEFT JOIN Popular pb ON b.BookId = pb.BookId
+WHERE fc.BookId IS NOT NULL 
+   OR nb.BookId IS NOT NULL 
+   OR pb.BookId IS NOT NULL
+ORDER BY b.BookId;
+
 WITH fc_BookCounts AS
 (
     SELECT COUNT(BookID) AS TotalFirstCategoryBooks
@@ -243,7 +254,7 @@ BEGIN
 
 	INSERT INTO @Newest (BookID)
 	SELECT BookID
-	FROM fn_NewestBooks(GETDATE(), 30)new_books
+	FROM fn_NewestBooks(@NewBookDateThreshold, 30)new_books
 	Order By new_books.AvailabilityDate DESC
 	
 		Select
@@ -282,7 +293,7 @@ BEGIN
     {
         return @"
 CREATE OR ALTER PROCEDURE SP_GetPagedNewestBooks
-     @PageNumber INT,
+    @PageNumber INT,
     @PageSize INT,
 	@LangCode CHAR(2)='en',
     @NewBooksDateThreshold DATETIME = NULL,
@@ -299,7 +310,8 @@ BEGIN
     );
 	INSERT INTO @Newest (BookID)
     SELECT nb.BookID
-    FROM dbo.fn_NewestBooks(@NewBooksDateThreshold, @NewBooksDaysThreshold) nb;
+    FROM dbo.fn_NewestBooks(@NewBooksDateThreshold, @NewBooksDaysThreshold) nb
+	order by nb.AvailabilityDate DESC;
 
     SELECT 
         b.BookId,
@@ -313,6 +325,7 @@ BEGIN
     Left JOIN @Newest nb  ON nb.BookID = b.BookID
     CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.TitleEN, b.TitleAR) Title
     CROSS APPLY dbo.fn_SelectByLanguage(@LangCode, b.AuthorNameEN, b.AuthorNameAR) Author
+	Where nb.BookID IS NOT NUll
     ORDER BY b.AvailabilityDate DESC
 	OFFSET (@PageNumber - 1) * @PageSize ROWS
 	FETCH NEXT @PageSize ROWS ONLY;
