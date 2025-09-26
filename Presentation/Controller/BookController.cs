@@ -1,4 +1,6 @@
 ﻿using Application.Features.Book;
+using Application.Features.Book.Dtos;
+using Application.Features.Book.Queries;
 using Application.Models;
 using Domain.AppMetaData;
 using Domain.Enums;
@@ -41,6 +43,20 @@ public class BookController : ApiController
 
 
 
+
+    }
+
+    [HttpGet(Router.BookRouter.Get)]
+    public async Task<IActionResult> GetBookDetails(int id)
+    {
+        var langCode = HttpContext.GetRequestLanguage();
+        var queyr = new GetBookDetailsQuery(id, langCode);
+
+        return await QueryExecutor.Execute(
+            queyr,
+            Sender,
+            (Response<BookDetailsDto> response) => NewResult(response)
+        );
 
     }
 
