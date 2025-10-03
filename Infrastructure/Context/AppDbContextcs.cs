@@ -18,15 +18,14 @@ public class AppDbContext : IdentityDbContext<User, Role, int,
     public DbSet<BookView> BookView { get; set; }
     public DbSet<SystemSettings> Settings { get; set; }
     public DbSet<BorrowingRecord> BorrowingRecords { get; set; }
+    public DbSet<BorrowingRecordView> BorrowingRecordsView { get; set; }
+    public DbSet<ReservationRecordView> ReservationRecordsViews { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<UserDevice> UserDevices { get; set; }
     public DbSet<Otp> Otps { get; set; }
 
     public AppDbContext(DbContextOptions options) : base(options)
     {
-
-
-
 
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
