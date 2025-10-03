@@ -17,6 +17,7 @@ public class SPAndFunctionsSeeder
         await SeederHelper.ExecuteSqlAsync(connection, _NewestBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _MostRecentBooksFunction());
         await SeederHelper.ExecuteSqlAsync(connection, _FirstCategoryBooksFunction());
+        await SeederHelper.ExecuteSqlAsync(connection, _IsNewBookFunction());
 
         await SeederHelper.ExecuteSqlAsync(connection, _SP_GetHomePageData());
         await SeederHelper.ExecuteSqlAsync(connection, _SP_GetPagedBooksByCategory());
@@ -145,6 +146,35 @@ ORDER BY
     OFFSET (@PageNumber - 1) * @PageSize ROWS
     FETCH NEXT @PageSize ROWS ONLY
 );";
+    }
+    private static string _IsNewBookFunction()
+    {
+        return @"
+CREATE OR ALTER FUNCTION [dbo].[fn_IsNewBook] 
+(
+    @NewBooksDateThreshold DATE, 
+    @NewBooksDaysThreshold INT,
+    @BookID INT
+)
+RETURNS BIT
+AS
+BEGIN
+    DECLARE @Result BIT = 0;
+
+    IF EXISTS (
+        SELECT 1
+        FROM Books b
+        WHERE b.BookID = @BookID
+          AND b.IsActive = 1
+          AND b.AvailabilityDate >= DATEADD(DAY, -@NewBooksDaysThreshold, @NewBooksDateThreshold)
+    )
+    BEGIN
+        SET @Result = 1;
+    END
+
+    RETURN @Result;
+END";
+
     }
     private static string _SP_GetHomePageData()
     {
