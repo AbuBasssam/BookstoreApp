@@ -1,4 +1,5 @@
 ﻿using Application.Features.Book;
+using Application.Features.Book.Dtos;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Entities;
@@ -151,5 +152,110 @@ public class BookRepository : GenericRepository<Book, int>, IBookRepository
         return (result, metadata);
     }
 
+    public async Task<IReadOnlyList<AuthorBookDto>> GetTopBorrowedByAuthorAsync(int authorId, int take, string lang, NewBookSetting newestSetting)
+    {
 
+
+        var date = newestSetting.NewBooksDateThreshold.ToString("yyyy-MM-dd");
+
+        var sqlQuery = $@"
+        Declare @Lang CHAR(2)='{lang}';
+        WITH BorrowCounts AS (
+            SELECT 
+                br.BookId,
+                COUNT(*) AS TotalBorrows
+            FROM vw_BorrowingRecord br
+            GROUP BY br.BookId
+        ),
+        BooksByAuthor AS (
+            SELECT
+                b.BookID As BookId,
+                TitleEN,
+                TitleAR,
+        		b.PublishDate as PublishDate,
+                Rating,
+                CoverImage ,
+                TotalBorrows
+            FROM vw_Books b 
+            LEFT JOIN BorrowCounts bc ON b.BookID = bc.BookId 
+            WHERE AuthorID = {authorId} AND IsActive = 1
+        )
+        SELECT TOP {take} BookId,
+            CASE WHEN @Lang = 'ar' THEN TitleAR ELSE TitleEN END AS Title,
+        	Year(PublishDate)as PublicationYear,
+            Rating As AverageRating,
+            CoverImage as CoverImageUrl,
+        dbo.fn_IsNewBook('{date}', {newestSetting.NewBooksDaysThreshold},BookId) AS  IsNewBook
+        FROM BooksByAuthor 
+        ORDER BY TotalBorrows DESC";
+        var result = await _context.Database
+           .SqlQueryRaw<AuthorBookDto>(sqlQuery)
+           .AsNoTracking()
+           .ToListAsync();
+
+        return result;
+
+    }
+
+    public async Task<IReadOnlyList<SimilarBookDto>> GetTopBorrowedByCategoryAsync(enCategory categoryId, int take, string lang, NewBookSetting newestSetting)
+    {
+        var date = newestSetting.NewBooksDateThreshold.ToString("yyyy-MM-dd");
+
+        var sqlQuery = $@"
+Declare @Lang CHAR(2)='{lang}';
+WITH BorrowCounts AS (
+    SELECT 
+        br.BookId,
+        COUNT(*) AS TotalBorrows
+    FROM vw_BorrowingRecord br
+    GROUP BY br.BookId
+),
+BooksByCategory AS (
+    SELECT
+        b.BookID As BookId,
+        TitleEN,
+        TitleAR,
+        AuthorNameEN,
+        AuthorNameAR,
+        Rating,
+        CoverImage ,
+        TotalBorrows
+    FROM vw_Books b 
+    LEFT JOIN BorrowCounts bc ON b.BookID = bc.BookId 
+    WHERE CategoryID = {(int)categoryId} AND IsActive = 1
+)
+SELECT TOP {take}
+    BookId,
+    CASE WHEN @Lang = 'ar' THEN TitleAR ELSE TitleEN END AS Title,
+    CASE WHEN @Lang = 'ar' THEN AuthorNameAR ELSE AuthorNameEN END AS Author,
+    Rating As AverageRating,
+    CoverImage as CoverImageUrl,
+dbo.fn_IsNewBook('{date}', {newestSetting.NewBooksDaysThreshold},BookId) AS  IsNewBook
+FROM BooksByCategory
+ORDER BY TotalBorrows DESC";
+
+        var result = await _context.Database
+            .SqlQueryRaw<SimilarBookDto>(sqlQuery)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return result;
+
+    }
+
+    public async Task<bool> IsNewBook(int bookId, NewBookSetting newestSetting)
+    {
+        var connection = _context.Database.GetDbConnection();
+
+        if (connection.State != ConnectionState.Open) await connection.OpenAsync();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"SELECT dbo.fn_IsNewBook(@date, @days, @bookId)";
+        cmd.Parameters.Add(new SqlParameter("@date", newestSetting.NewBooksDateThreshold));
+        cmd.Parameters.Add(new SqlParameter("@days", newestSetting.NewBooksDaysThreshold));
+        cmd.Parameters.Add(new SqlParameter("@bookId", bookId));
+
+        var scalarResult = await cmd.ExecuteScalarAsync();
+        return (bool)scalarResult;
+    }
 }
