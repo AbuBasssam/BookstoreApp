@@ -25,6 +25,6 @@ public class BorrowingRecordViewConfiguration : IEntityTypeConfiguration<Borrowi
         builder.Property(b => b.AdminID).HasColumnName("AdminID");
         builder.Property(b => b.AdminName).HasColumnName("AdminName");
         builder.Property(b => b.TotalFines).HasColumnName("TotalFines");
-        builder.Property(b => b.BorrowingStatus).HasConversion<int>().HasColumnName("BorrowingStatus");
+        builder.Property(b => b.BorrowingStatus).HasConversion<string>().HasColumnName("BorrowingStatus");
     }
 }

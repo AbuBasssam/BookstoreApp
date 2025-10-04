@@ -10,7 +10,7 @@ public class ReservationRecord : IEntity<int>
     public int MemberID { get; set; }
     public DateTime ReservationDate { get; set; } = DateTime.UtcNow;
     public enReservationType Type { get; set; }
-    public enReservationStatus Status { get; set; }
+    public enReservationStatus Status { get; set; } = enReservationStatus.Pending;
     public DateTime? ExpirationDate { get; set; }
 
     // Navigation properties

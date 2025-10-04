@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Enums;
+
+namespace Domain.Entities;
 
 public class ReservationRecordView : IEntity<int>
 {
@@ -12,11 +14,10 @@ public class ReservationRecordView : IEntity<int>
     public string UserName { get; set; }
     public string MemberEmail { get; set; }
     public DateTime ReservationDate { get; set; }
-    public string ReservationType { get; set; }
-    public string ReservationStatus { get; set; }
+    public enReservationType ReservationType { get; set; }
+    public enReservationStatus ReservationStatus { get; set; }
     public DateTime? ExpirationDate { get; set; }
-    public string ReservationState { get; set; }
-    public int? HoursUntilExpiration { get; set; }
+    public enReservationState ReservationState { get; set; }
     public int? RemainingPickupHours { get; set; }
     public int WaitingQueuePosition { get; set; }
 }

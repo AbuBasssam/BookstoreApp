@@ -23,12 +23,11 @@ public class ReservationRecordViewConfiguration : IEntityTypeConfiguration<Reser
         builder.Property(e => e.MemberEmail).HasColumnName("MemberEmail");
         builder.Property(e => e.ReservationDate).HasColumnName("ReservationDate");
         builder.Property(e => e.ExpirationDate).HasColumnName("ExpirationDate");
-        builder.Property(e => e.HoursUntilExpiration).HasColumnName("HoursUntilExpiration");
         builder.Property(e => e.RemainingPickupHours).HasColumnName("RemainingPickupHours");
         builder.Property(e => e.WaitingQueuePosition).HasColumnName("WaitingQueuePosition");
-        builder.Property(e => e.ReservationType).HasConversion<int>().HasColumnName("ReservationType");
-        builder.Property(e => e.ReservationStatus).HasConversion<int>().HasColumnName("ReservationStatus");
-        builder.Property(e => e.ReservationState).HasConversion<int>().HasColumnName("ReservationState");
+        builder.Property(e => e.ReservationType).HasConversion<string>().HasColumnName("ReservationType");
+        builder.Property(e => e.ReservationStatus).HasConversion<string>().HasColumnName("ReservationStatus");
+        builder.Property(e => e.ReservationState).HasConversion<string>().HasColumnName("ReservationState");
 
     }
 }

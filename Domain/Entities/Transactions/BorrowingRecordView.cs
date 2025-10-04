@@ -18,6 +18,5 @@ public class BorrowingRecordView : IEntity<int>
     public int AdminID { get; set; }
     public string AdminName { get; set; }
     public decimal TotalFines { get; set; }
-
-    public BorrowingStatus BorrowingStatus { get; set; }
+    public enBorrowingStatus BorrowingStatus { get; set; }
 }

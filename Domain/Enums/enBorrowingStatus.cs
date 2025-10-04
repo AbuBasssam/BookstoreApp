@@ -2,10 +2,8 @@
 
 public enum enBorrowingStatus
 {
-    Pending = 1,
-    Active = 2,
-    Returned = 3,
-    Overdue = 4,
-    Cancelled = 5
+    Active = 1,
+    Returned = 2,
+    Overdue = 3,
 
 }
