@@ -50,7 +50,8 @@ public class BookController : ApiController
     public async Task<IActionResult> GetBookDetails(int id)
     {
         var langCode = HttpContext.GetRequestLanguage();
-        var queyr = new GetBookDetailsQuery(id, langCode);
+        var token = HttpContext.GetAuthToken();
+        var queyr = new GetBookDetailsQuery(id, langCode, token!);
 
         return await QueryExecutor.Execute(
             queyr,

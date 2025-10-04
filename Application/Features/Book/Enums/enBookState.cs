@@ -6,5 +6,6 @@ public enum enBookState
     Reservable = 3,
     Reserved = 4,
     Unavailable = 5,
+    Overdue = 6,
 }
 
