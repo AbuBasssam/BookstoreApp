@@ -43,7 +43,6 @@ public static class DependencyInjection
         .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
         );
     }
-
     private static void IdentityRegisteration(IServiceCollection services)
     {
         services.AddIdentityCore<User>(options =>
@@ -90,6 +89,7 @@ public static class DependencyInjection
 
         services.AddScoped<IBookRepository, BookRepository>();
 
+        services.AddScoped<ISystemSettingsRepository, SystemSettingsRepository>();
 
     }
     private static void AddHandlers(IServiceCollection services)
