@@ -7,9 +7,11 @@ public class GetBookDetailsQuery : IRequest<Response<BookDetailsDto>>
 {
     public int Id { get; set; }
     public string LangCode { get; set; }
-    public GetBookDetailsQuery(int Id, string langCode)
+    public string Token { get; set; }
+    public GetBookDetailsQuery(int id, string langCode, string token)
     {
-        this.Id = Id;
-        this.LangCode = langCode;
+        Id = id;
+        LangCode = langCode;
+        Token = token;
     }
 }
